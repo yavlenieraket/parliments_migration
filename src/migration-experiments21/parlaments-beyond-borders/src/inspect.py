@@ -26,8 +26,10 @@ def show_top_countries(
         .group_by("entity_content")
         .agg([
             pl.len().alias("n_mentions"),
-            # Explanation: Mark whether an entity is a foreign state or French overseas.
+            # Explanation: Mark whether an entity is foreign, EU, or French overseas.
             pl.col("geo_class").first().alias("geo_class"),
+            # Explanation: Mark Europe / non-Europe / EU / French overseas grouping.
+            pl.col("region_group").first().alias("region_group"),
             pl.col("sentence_sentiment_value").mean().round(3).alias("avg_sentiment"),
             pl.col("sentence_sentiment_value").std().round(3).alias("std_sentiment"),
             pl.col("sentence_sentiment_value").min().alias("min_sentiment"),
@@ -44,7 +46,7 @@ def country_distribution(df: pl.DataFrame, min_mentions: int = 1) -> pl.DataFram
     # Explanation: This is the complete count table behind the distribution plots.
     return (
         df
-        .group_by(["entity_content", "geo_class"])
+        .group_by(["entity_content", "geo_class", "region_group"])
         .agg([
             pl.len().alias("n_mentions"),
             # Explanation: Percent of the filtered migration-mention dataset.

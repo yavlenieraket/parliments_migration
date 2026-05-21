@@ -26,9 +26,29 @@ REF_TYPE_COLORS = {
     "unknown": "#d0d0d0",
 }
 
+REGION_GROUP_COLORS = {
+    "european_country": "#4c78a8",
+    "non_european_country": "#72b7b2",
+    "european_union": "#b279a2",
+    "french_overseas": "#f58518",
+}
+
+REGION_GROUP_LABELS = {
+    "european_country": "European country",
+    "non_european_country": "Non-European country/case",
+    "european_union": "European Union",
+    "french_overseas": "French overseas territory",
+}
+
 # Explanation: Fixed category orders make comparisons stable across notebook reruns.
 SENTIMENT_ORDER = ["positive", "negative", "neutral"]
 REF_TYPE_ORDER = ["policy", "situation", "mixed", "neutral_reference", "unknown"]
+REGION_GROUP_ORDER = [
+    "european_country",
+    "non_european_country",
+    "european_union",
+    "french_overseas",
+]
 
 
 def ensure_figures_dir(processed_dir: Path) -> Path:
@@ -61,7 +81,7 @@ def entity_display_labels(df: pl.DataFrame, entities: list[str]) -> dict[str, st
         for row in (
             df
             .filter(pl.col("entity_content").is_in(entities))
-            .select(["entity_content", "geo_class"])
+            .select(["entity_content", "geo_class", "region_group"])
             .unique()
             .to_dicts()
         )
@@ -70,6 +90,8 @@ def entity_display_labels(df: pl.DataFrame, entities: list[str]) -> dict[str, st
         entity: (
             f"{entity} (French overseas)"
             if geo_lookup.get(entity) == "french_overseas"
+            else f"{entity} (EU)"
+            if entity == "European Union"
             else entity
         )
         for entity in entities
@@ -81,7 +103,7 @@ def entity_distribution_table(df: pl.DataFrame, min_mentions: int = 1) -> pl.Dat
     # Explanation: This table is the source for the distribution chart and CSV export.
     return (
         df
-        .group_by(["entity_content", "geo_class"])
+        .group_by(["entity_content", "geo_class", "region_group"])
         .agg([
             pl.len().alias("n_mentions"),
             (pl.len() / df.height * 100).round(2).alias("share_percent"),
@@ -155,8 +177,10 @@ def plot_entity_distribution(
     plot_df["display_entity"] = plot_df["entity_content"].map(labels)
     plot_df["bar_color"] = plot_df["geo_class"].map({
         "foreign": "#4c78a8",
-        "french_overseas": "#f58518",
+        "french_overseas": REGION_GROUP_COLORS["french_overseas"],
+        "european_union": REGION_GROUP_COLORS["european_union"],
     })
+    plot_df["bar_color"] = plot_df["region_group"].map(REGION_GROUP_COLORS).fillna(plot_df["bar_color"])
 
     # Explanation: The figure height grows with the number of entities in the chart.
     fig_height = max(7, len(plot_df) * 0.22)
@@ -173,12 +197,76 @@ def plot_entity_distribution(
 
     # Explanation: The legend clarifies that overseas territories are not foreign states.
     handles = [
-        plt.Rectangle((0, 0), 1, 1, color="#4c78a8", label="Foreign state/entity"),
-        plt.Rectangle((0, 0), 1, 1, color="#f58518", label="French overseas territory"),
+        plt.Rectangle((0, 0), 1, 1, color=REGION_GROUP_COLORS[key], label=REGION_GROUP_LABELS[key])
+        for key in REGION_GROUP_ORDER
     ]
     ax.legend(handles=handles, loc="lower right")
     plt.tight_layout()
     plt.savefig(output_path, dpi=160)
+    plt.close()
+    return output_path
+
+
+def plot_region_group_distribution(df: pl.DataFrame, output_path: Path) -> Path:
+    """Plot mentions by European / non-European / EU / French overseas group."""
+    # Explanation: This answers whether France mentions European countries, non-European
+    # countries/cases, French overseas territories, or the European Union itself.
+    counts = (
+        df
+        .group_by("region_group")
+        .agg(pl.len().alias("n_mentions"))
+        .to_pandas()
+        .set_index("region_group")
+        .reindex(REGION_GROUP_ORDER, fill_value=0)
+    )
+    counts["label"] = [REGION_GROUP_LABELS[group] for group in counts.index]
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.bar(
+        counts["label"],
+        counts["n_mentions"],
+        color=[REGION_GROUP_COLORS[group] for group in counts.index],
+    )
+    ax.set_title("Mentions by European / non-European grouping")
+    ax.set_xlabel("Analytical group")
+    ax.set_ylabel("Number of mentions")
+    ax.tick_params(axis="x", rotation=25)
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=200)
+    plt.close()
+    return output_path
+
+
+def plot_region_group_sentiment(df: pl.DataFrame, output_path: Path) -> Path:
+    """Plot sentiment distribution by European / non-European / EU group."""
+    # Explanation: This shows whether sentiment differs by broad geography group.
+    counts = (
+        df
+        .group_by(["region_group", "sentiment_bucket"])
+        .agg(pl.len().alias("n"))
+        .to_pandas()
+        .set_index(["region_group", "sentiment_bucket"])
+    )
+    index = pd.MultiIndex.from_product(
+        [REGION_GROUP_ORDER, SENTIMENT_ORDER],
+        names=["region_group", "sentiment_bucket"],
+    )
+    table = counts.reindex(index, fill_value=0)["n"].unstack("sentiment_bucket")
+    table.index = [REGION_GROUP_LABELS[group] for group in table.index]
+
+    ax = table[SENTIMENT_ORDER].plot(
+        kind="barh",
+        stacked=True,
+        figsize=(10, 5),
+        color=[SENTIMENT_COLORS[col] for col in SENTIMENT_ORDER],
+    )
+    ax.invert_yaxis()
+    ax.set_title("Sentiment by European / non-European grouping")
+    ax.set_xlabel("Number of mentions")
+    ax.set_ylabel("Analytical group")
+    ax.legend(title="Sentiment", loc="lower right")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=200)
     plt.close()
     return output_path
 
@@ -300,6 +388,42 @@ def plot_policy_situation_sentiment(
     return output_path
 
 
+def plot_policy_situation_sentiment_heatmap(df: pl.DataFrame, output_path: Path) -> Path:
+    """Plot sentiment heatmap for policy vs international situation references."""
+    # Explanation: "Situation" is our operationalization of international context:
+    # events, crossings, camps, crises, war, refugees, and similar markers.
+    filtered = df.filter(pl.col("ref_type").is_in(["policy", "situation"]))
+    counts = (
+        filtered
+        .group_by(["ref_type", "sentiment_bucket"])
+        .agg(pl.len().alias("n"))
+        .to_pandas()
+        .set_index(["ref_type", "sentiment_bucket"])
+    )
+    index = pd.MultiIndex.from_product(
+        [["policy", "situation"], SENTIMENT_ORDER],
+        names=["ref_type", "sentiment_bucket"],
+    )
+    heatmap_df = counts.reindex(index, fill_value=0)["n"].unstack("sentiment_bucket")
+
+    plt.figure(figsize=(7, 3.5))
+    sns.heatmap(
+        heatmap_df[SENTIMENT_ORDER],
+        annot=True,
+        fmt="d",
+        cmap="Reds",
+        linewidths=0.5,
+        cbar_kws={"label": "Mentions"},
+    )
+    plt.title("Sentiment heatmap: policy vs international situation references")
+    plt.xlabel("Sentiment")
+    plt.ylabel("Reference type")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=220)
+    plt.close()
+    return output_path
+
+
 def plot_reference_heatmap(
     df: pl.DataFrame,
     output_path: Path,
@@ -335,7 +459,7 @@ def save_all_figures(
     df: pl.DataFrame,
     processed_dir: Path,
     top_n: int = 10,
-    min_mentions_for_all: int = 50,
+    min_mentions_for_all: int = 26,
 ) -> dict[str, Path]:
     """Create every pilot visualization and return the saved file paths."""
     # Explanation: One function lets notebook users regenerate all figures consistently.
@@ -346,15 +470,15 @@ def save_all_figures(
             figures_dir / "entity_distribution_top10.png",
             top_n=10,
         ),
-        "entity_distribution_min50": plot_entity_distribution(
+        "entity_distribution_min26": plot_entity_distribution(
             df,
-            figures_dir / "entity_distribution_min50.png",
+            figures_dir / "entity_distribution_min26.png",
             top_n=None,
             min_mentions=min_mentions_for_all,
         ),
-        "entity_distribution_min50_csv": save_significant_entity_distribution_table(
+        "entity_distribution_min26_csv": save_significant_entity_distribution_table(
             df,
-            processed_dir / "entity_distribution_min50.csv",
+            processed_dir / "entity_distribution_min26.csv",
             min_mentions=min_mentions_for_all,
         ),
         "entity_distribution_all_csv": save_entity_distribution_table(
@@ -375,6 +499,18 @@ def save_all_figures(
             df,
             figures_dir / "policy_vs_situation_sentiment_top10.png",
             top_n=top_n,
+        ),
+        "policy_situation_sentiment_heatmap": plot_policy_situation_sentiment_heatmap(
+            df,
+            figures_dir / "policy_situation_sentiment_heatmap.png",
+        ),
+        "region_group_distribution": plot_region_group_distribution(
+            df,
+            figures_dir / "region_group_distribution.png",
+        ),
+        "region_group_sentiment": plot_region_group_sentiment(
+            df,
+            figures_dir / "region_group_sentiment.png",
         ),
         "reference_heatmap": plot_reference_heatmap(
             df,

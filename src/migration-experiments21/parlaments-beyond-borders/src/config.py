@@ -50,7 +50,7 @@ FRENCH_CITIES_REGIONS = {
 GEO_NON_COUNTRY = {
     "Europe", "Mediterranean", "Atlantic", "Sahel",
     "Maghreb", "Balkans", "Middle East", "Africa", "Asia",
-    "European Union", "EU", "the Union",
+    "the Union",
     "Member States", "States",
     "Schengen Area", "Schengen",
     "the West", "Western Europe", "Eastern Europe",
@@ -69,6 +69,24 @@ FRENCH_OVERSEAS = {
     "Martinique", "Guadeloupe",
     "New Caledonia", "Nouvelle-Calédonie",
     "French Polynesia", "Polynesia",
+}
+
+EU_ENTITIES = {
+    "European Union",
+    "EU",
+}
+
+EUROPEAN_COUNTRIES = {
+    "Albania", "Andorra", "Austria", "Belarus", "Belgium",
+    "Bosnia and Herzegovina", "Bulgaria", "Croatia", "Cyprus",
+    "Czech Republic", "Czechia", "Denmark", "Estonia", "Finland",
+    "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Italy",
+    "Kosovo", "Latvia", "Liechtenstein", "Lithuania", "Luxembourg",
+    "Malta", "Moldova", "Monaco", "Montenegro", "Netherlands",
+    "North Macedonia", "Norway", "Poland", "Portugal", "Romania",
+    "Russia", "San Marino", "Serbia", "Slovakia", "Slovenia",
+    "Spain", "Sweden", "Switzerland", "Ukraine", "United Kingdom",
+    "Vatican City",
 }
 
 EXCLUDE_FROM_FOREIGN = FRANCE_SELF | FRENCH_CITIES_REGIONS | GEO_NON_COUNTRY

@@ -32,6 +32,10 @@ French overseas territories such as Mayotte and French Guiana are kept in the
 analysis because they are important in migration debates, but they are marked
 as `geo_class = french_overseas`. They are not foreign states.
 
+The European Union is kept as `region_group = european_union`. It is captured
+from explicit `ORG` mentions such as `European Union` and `EU`, because the EU
+is not tagged as a country/location in the source data.
+
 ## Data
 
 ParlaMint extracted parquet files. Not committed to the repo.
@@ -57,11 +61,14 @@ The notebook saves the annotated mention table here:
 
 It also saves four visualization files here:
 
-- `data/processed/entity_distribution_min50.csv` - displayed distribution of every entity with at least 50 mentions
+- `data/processed/entity_distribution_min26.csv` - displayed distribution of every entity mentioned more than 25 times
 - `data/processed/entity_distribution_all_for_audit.csv` - full audit distribution of every retained mentioned entity
 - `data/processed/figures/entity_distribution_top10.png` - distribution chart for the 10 most mentioned countries/cases
-- `data/processed/figures/entity_distribution_min50.png` - all entities with at least 50 mentions; entities below 50 are not shown
+- `data/processed/figures/entity_distribution_min26.png` - all entities mentioned more than 25 times; entities with 25 or fewer mentions are not shown
 - `data/processed/figures/country_sentiment_mentions_top10.png` - top 10 entities colored by positive / negative / neutral sentiment
 - `data/processed/figures/country_reference_type_mentions_top10.png` - top 10 entities split by policy / situation / mixed / neutral reference type
 - `data/processed/figures/policy_vs_situation_sentiment_top10.png` - top 10 sentiment-colored comparison of policy references versus international situation/context references
+- `data/processed/figures/policy_situation_sentiment_heatmap.png` - heatmap of positive / negative / neutral sentiment for policy vs situation references
+- `data/processed/figures/region_group_distribution.png` - mentions split into European countries, non-European countries/cases, EU, and French overseas territories
+- `data/processed/figures/region_group_sentiment.png` - sentiment split by the same Europe / non-Europe / EU grouping
 - `data/processed/figures/country_reference_heatmap_top10.png` - top 10 heatmap of reference-type intensity by mentioned entity

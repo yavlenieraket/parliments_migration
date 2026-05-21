@@ -2,7 +2,13 @@
 
 import polars as pl
 
-from src.config import EXCLUDE_FROM_FOREIGN, FRENCH_OVERSEAS, MIGRATION_TOPIC
+from src.config import (
+    EU_ENTITIES,
+    EUROPEAN_COUNTRIES,
+    EXCLUDE_FROM_FOREIGN,
+    FRENCH_OVERSEAS,
+    MIGRATION_TOPIC,
+)
 
 
 COUNTRY_ALIASES = {
@@ -49,7 +55,10 @@ COUNTRY_ALIASES = {
     "Guyana": "French Guiana",
     "Mahorais": "Mayotte",
     "Anjouan": "Comoros",
+    "EU": "European Union",
 }
+
+EU_ENTITY_ALIASES = {"European Union", "EU"}
 
 
 def filter_migration(lf: pl.LazyFrame) -> pl.LazyFrame:
@@ -59,9 +68,15 @@ def filter_migration(lf: pl.LazyFrame) -> pl.LazyFrame:
 
 
 def filter_country_mentions(lf: pl.LazyFrame) -> pl.LazyFrame:
-    """Keep only LOC entities (countries, cities, geographic locations)."""
-    # Explanation: We start broad with LOC, then remove domestic/non-country terms later.
-    return lf.filter(pl.col("entity_category") == "LOC")
+    """Keep LOC entities plus explicit European Union organization mentions."""
+    # Explanation: Countries are usually LOC, but the European Union is encoded as ORG.
+    return lf.filter(
+        (pl.col("entity_category") == "LOC")
+        | (
+            (pl.col("entity_category") == "ORG")
+            & pl.col("entity_content").is_in(EU_ENTITY_ALIASES)
+        )
+    )
 
 
 def normalize_country_names(lf: pl.LazyFrame) -> pl.LazyFrame:
@@ -88,12 +103,30 @@ def filter_foreign(lf: pl.LazyFrame) -> pl.LazyFrame:
 
 def add_geo_class(lf: pl.LazyFrame) -> pl.LazyFrame:
     """Add a column distinguishing foreign countries from French overseas territories."""
-    # Explanation: Overseas territories are not foreign countries, but we keep them visible.
+    # Explanation: EU and overseas territories are not foreign countries, but we keep them visible.
     return lf.with_columns(
-        pl.when(pl.col("entity_content").is_in(FRENCH_OVERSEAS))
+        pl.when(pl.col("entity_content").is_in(EU_ENTITIES))
+        .then(pl.lit("european_union"))
+        .when(pl.col("entity_content").is_in(FRENCH_OVERSEAS))
         .then(pl.lit("french_overseas"))
         .otherwise(pl.lit("foreign"))
         .alias("geo_class")
+    )
+
+
+def add_region_group(lf: pl.LazyFrame) -> pl.LazyFrame:
+    """Add Europe / non-Europe / EU / French overseas analytical grouping."""
+    # Explanation: This lets us compare European country mentions with non-European ones
+    # while keeping the European Union and French overseas territories separate.
+    return lf.with_columns(
+        pl.when(pl.col("entity_content").is_in(EU_ENTITIES))
+        .then(pl.lit("european_union"))
+        .when(pl.col("entity_content").is_in(FRENCH_OVERSEAS))
+        .then(pl.lit("french_overseas"))
+        .when(pl.col("entity_content").is_in(EUROPEAN_COUNTRIES))
+        .then(pl.lit("european_country"))
+        .otherwise(pl.lit("non_european_country"))
+        .alias("region_group")
     )
 
 
@@ -128,6 +161,7 @@ def build_migration_mentions(lf: pl.LazyFrame) -> pl.DataFrame:
         .pipe(normalize_country_names)
         .pipe(filter_foreign)
         .pipe(add_geo_class)
+        .pipe(add_region_group)
         .pipe(build_context_window)
         .select([
             "sentence_id",
@@ -137,6 +171,7 @@ def build_migration_mentions(lf: pl.LazyFrame) -> pl.DataFrame:
             "speaker_ana",
             "entity_content",
             "geo_class",
+            "region_group",
             "context_window",
             "sentence_content_current",
             "sentence_sentiment_value",
