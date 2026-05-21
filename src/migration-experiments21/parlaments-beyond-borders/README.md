@@ -57,6 +57,9 @@ The notebook saves the annotated mention table here:
 
 It also saves four visualization files here:
 
+- `data/processed/entity_distribution_all.csv` - complete distribution of every retained mentioned entity
+- `data/processed/figures/entity_distribution_top40.png` - readable distribution chart for the 40 most mentioned entities
+- `data/processed/figures/entity_distribution_all.png` - full all-entities distribution chart
 - `data/processed/figures/country_sentiment_mentions.png` - top mentioned entities colored by positive / negative / neutral sentiment
 - `data/processed/figures/country_reference_type_mentions.png` - top mentioned entities split by policy / situation / mixed / neutral reference type
 - `data/processed/figures/policy_vs_situation_sentiment.png` - sentiment-colored comparison of policy references versus international situation/context references

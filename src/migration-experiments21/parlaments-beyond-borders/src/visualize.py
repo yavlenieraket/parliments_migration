@@ -1,5 +1,7 @@
 """Visualization helpers for the France 2018 migration pilot."""
 
+from __future__ import annotations
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -74,6 +76,28 @@ def entity_display_labels(df: pl.DataFrame, entities: list[str]) -> dict[str, st
     }
 
 
+def entity_distribution_table(df: pl.DataFrame, min_mentions: int = 1) -> pl.DataFrame:
+    """Return the complete distribution of mentioned entities."""
+    # Explanation: This table is the source for the distribution chart and CSV export.
+    return (
+        df
+        .group_by(["entity_content", "geo_class"])
+        .agg([
+            pl.len().alias("n_mentions"),
+            (pl.len() / df.height * 100).round(2).alias("share_percent"),
+        ])
+        .filter(pl.col("n_mentions") >= min_mentions)
+        .sort("n_mentions", descending=True)
+    )
+
+
+def save_entity_distribution_table(df: pl.DataFrame, output_path: Path) -> Path:
+    """Save the full mentioned-entity distribution as CSV."""
+    # Explanation: CSV is the easiest format for colleagues to audit every entity.
+    entity_distribution_table(df).write_csv(output_path)
+    return output_path
+
+
 def _complete_count_table(
     df: pl.DataFrame,
     category_column: str,
@@ -100,6 +124,51 @@ def _complete_count_table(
     # Explanation: The pivoted table is the direct input for stacked horizontal bars.
     table = counts["n"].unstack(category_column).reset_index()
     return table[["entity_content", *categories]]
+
+
+def plot_entity_distribution(
+    df: pl.DataFrame,
+    output_path: Path,
+    top_n: int | None = 40,
+) -> Path:
+    """Plot total migration mentions by country/territory entity."""
+    # Explanation: top_n=None creates the full all-entities chart; top_n=40 is readable.
+    distribution = entity_distribution_table(df)
+    if top_n is not None:
+        distribution = distribution.head(top_n)
+
+    entities = distribution.get_column("entity_content").to_list()
+    labels = entity_display_labels(df, entities)
+    plot_df = distribution.to_pandas()
+    plot_df["display_entity"] = plot_df["entity_content"].map(labels)
+    plot_df["bar_color"] = plot_df["geo_class"].map({
+        "foreign": "#4c78a8",
+        "french_overseas": "#f58518",
+    })
+
+    # Explanation: The figure height grows with the number of entities in the chart.
+    fig_height = max(7, len(plot_df) * 0.22)
+    fig, ax = plt.subplots(figsize=(11, fig_height))
+    ax.barh(
+        plot_df["display_entity"],
+        plot_df["n_mentions"],
+        color=plot_df["bar_color"],
+    )
+    ax.invert_yaxis()
+    ax.set_title("Distribution of mentioned entities in France 2018 migration debates")
+    ax.set_xlabel("Number of mentions")
+    ax.set_ylabel("Mentioned entity")
+
+    # Explanation: The legend clarifies that overseas territories are not foreign states.
+    handles = [
+        plt.Rectangle((0, 0), 1, 1, color="#4c78a8", label="Foreign state/entity"),
+        plt.Rectangle((0, 0), 1, 1, color="#f58518", label="French overseas territory"),
+    ]
+    ax.legend(handles=handles, loc="lower right")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=160)
+    plt.close()
+    return output_path
 
 
 def plot_country_sentiment_mentions(
@@ -259,6 +328,20 @@ def save_all_figures(
     # Explanation: One function lets notebook users regenerate all figures consistently.
     figures_dir = ensure_figures_dir(processed_dir)
     return {
+        "entity_distribution_top40": plot_entity_distribution(
+            df,
+            figures_dir / "entity_distribution_top40.png",
+            top_n=40,
+        ),
+        "entity_distribution_all": plot_entity_distribution(
+            df,
+            figures_dir / "entity_distribution_all.png",
+            top_n=None,
+        ),
+        "entity_distribution_csv": save_entity_distribution_table(
+            df,
+            processed_dir / "entity_distribution_all.csv",
+        ),
         "country_sentiment": plot_country_sentiment_mentions(
             df,
             figures_dir / "country_sentiment_mentions.png",

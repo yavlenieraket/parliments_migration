@@ -39,6 +39,22 @@ def show_top_countries(
     )
 
 
+def country_distribution(df: pl.DataFrame, min_mentions: int = 1) -> pl.DataFrame:
+    """Distribution of every mentioned country/territory entity."""
+    # Explanation: This is the complete count table behind the distribution plots.
+    return (
+        df
+        .group_by(["entity_content", "geo_class"])
+        .agg([
+            pl.len().alias("n_mentions"),
+            # Explanation: Percent of the filtered migration-mention dataset.
+            (pl.len() / df.height * 100).round(2).alias("share_percent"),
+        ])
+        .filter(pl.col("n_mentions") >= min_mentions)
+        .sort("n_mentions", descending=True)
+    )
+
+
 def show_sample_contexts(
     df: pl.DataFrame,
     country: str,
