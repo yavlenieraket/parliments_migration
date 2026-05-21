@@ -46,7 +46,7 @@ def show_sample_contexts(
 
     Used for manual validation of the heuristic classifier.
     """
-    return (
+    sample = (
         df
         .filter(pl.col("entity_content") == country)
         .select([
@@ -57,5 +57,7 @@ def show_sample_contexts(
             "sentence_sentiment_value",
             "context_window",
         ])
-        .sample(n=min(n_samples, df.height), seed=42)
     )
+    if sample.is_empty():
+        return sample
+    return sample.sample(n=min(n_samples, sample.height), seed=42)

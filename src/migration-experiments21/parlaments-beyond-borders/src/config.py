@@ -19,7 +19,7 @@ MASTER_ORGS = DATA_ROOT / "Table3_Orgs" / "Master_Orgs.parquet"
 MASTER_AFFILIATIONS = DATA_ROOT / "Table4_Affiliations" / "Master_Affiliations.parquet"
 
 # === Filtering constants ===
-MIGRATION_TOPIC = "immigration"
+MIGRATION_TOPIC = "immig"
 
 # Entities to exclude when searching for "foreign" countries in French debates.
 # These are France itself, French cities/regions, and non-country geographic terms.
