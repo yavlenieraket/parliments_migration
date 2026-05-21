@@ -1,7 +1,8 @@
 # Parliaments Beyond Borders - Migration Discourse Pilot
 
 DHH26 hackathon project analyzing how national parliaments reference
-foreign countries in migration debates.
+foreign countries in migration debates. The pilot uses the translated
+`ParlaMint-en.ana` corpus, so entity names and typology markers are English.
 
 ## Pilot scope
 

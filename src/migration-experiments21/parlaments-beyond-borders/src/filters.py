@@ -5,6 +5,51 @@ import polars as pl
 from src.config import EXCLUDE_FROM_FOREIGN, FRENCH_OVERSEAS, MIGRATION_TOPIC
 
 
+COUNTRY_ALIASES = {
+    "Allemagne": "Germany",
+    "Deutschland": "Germany",
+    "Federal Republic of Germany": "Germany",
+    "German": "Germany",
+    "Italie": "Italy",
+    "Italia": "Italy",
+    "Italian": "Italy",
+    "Espagne": "Spain",
+    "España": "Spain",
+    "Spanish": "Spain",
+    "Royaume-Uni": "United Kingdom",
+    "Grande-Bretagne": "United Kingdom",
+    "UK": "United Kingdom",
+    "Britain": "United Kingdom",
+    "British": "United Kingdom",
+    "Great Britain": "United Kingdom",
+    "England": "United Kingdom",
+    "Hongrie": "Hungary",
+    "Hungarian": "Hungary",
+    "Pologne": "Poland",
+    "Belgique": "Belgium",
+    "Pays-Bas": "Netherlands",
+    "Holland": "Netherlands",
+    "Grèce": "Greece",
+    "Turquie": "Turkey",
+    "Maroc": "Morocco",
+    "Algérie": "Algeria",
+    "Tunisie": "Tunisia",
+    "Libye": "Libya",
+    "Syrie": "Syria",
+    "Soudan": "Sudan",
+    "Sénégal": "Senegal",
+    "Mali": "Mali",
+    "États-Unis": "United States",
+    "USA": "United States",
+    "U.S.": "United States",
+    "U.S.A.": "United States",
+    "America": "United States",
+    "Guyana": "French Guiana",
+    "Mahorais": "Mayotte",
+    "Anjouan": "Comoros",
+}
+
+
 def filter_migration(lf: pl.LazyFrame) -> pl.LazyFrame:
     """Keep only rows from speeches tagged as immigration (CAP topic 9)."""
     return lf.filter(pl.col("debate_topic") == MIGRATION_TOPIC)
@@ -13,6 +58,18 @@ def filter_migration(lf: pl.LazyFrame) -> pl.LazyFrame:
 def filter_country_mentions(lf: pl.LazyFrame) -> pl.LazyFrame:
     """Keep only LOC entities (countries, cities, geographic locations)."""
     return lf.filter(pl.col("entity_category") == "LOC")
+
+
+def normalize_country_names(lf: pl.LazyFrame) -> pl.LazyFrame:
+    """Merge known country-name variants into a canonical English form."""
+    expr = pl.col("entity_content")
+    for variant, canonical in COUNTRY_ALIASES.items():
+        expr = (
+            pl.when(pl.col("entity_content") == variant)
+            .then(pl.lit(canonical))
+            .otherwise(expr)
+        )
+    return lf.with_columns(expr.alias("entity_content"))
 
 
 def filter_foreign(lf: pl.LazyFrame) -> pl.LazyFrame:
@@ -59,6 +116,7 @@ def build_migration_mentions(lf: pl.LazyFrame) -> pl.DataFrame:
         lf
         .pipe(filter_migration)
         .pipe(filter_country_mentions)
+        .pipe(normalize_country_names)
         .pipe(filter_foreign)
         .pipe(add_geo_class)
         .pipe(build_context_window)

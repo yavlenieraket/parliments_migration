@@ -1,6 +1,6 @@
-"""Classification of foreign country mentions along two axes:
-- Reference type: policy vs situation vs mixed vs neutral
-- Sentiment polarity: positive vs negative vs neutral
+"""Classify mentions: reference type (policy/situation) x sentiment bucket.
+
+All markers are English because we work on ParlaMint-en.ana.
 """
 
 from __future__ import annotations
@@ -8,49 +8,73 @@ from __future__ import annotations
 import polars as pl
 
 
-# === Lexical markers for the reference-type classifier ===
-
-POLICY_MARKERS_FR = {
-    "loi", "lois", "politique", "politiques", "modèle", "modèles",
-    "approche", "système", "réglementation", "décret", "directive",
-    "réforme", "réformes", "voté", "voter", "adopté", "adopter",
-    "rejeté", "rejeter", "applique", "appliquer", "décide", "décider",
-    "instaure", "instaurer", "accord", "accords", "traité", "traités",
-    "convention", "conventions", "pacte", "pactes",
-    "gouvernement", "gouvernementale", "ministre", "parlement",
-    "quota", "quotas", "régularisation", "expulsion", "expulsions",
-    "naturalisation", "asile",
+# === Policy reference markers ===
+# Signals that the mention is about what a country does legislatively,
+# administratively, or institutionally.
+POLICY_MARKERS_EN = {
+    "law", "laws", "legislation", "legislative",
+    "policy", "policies", "regulation", "regulations",
+    "decree", "directive", "directives", "reform", "reforms",
+    "rule", "rules", "act", "bill", "framework",
+    "voted", "vote", "adopted", "adopt", "approved", "approve",
+    "rejected", "reject", "passed", "ratified", "ratify",
+    "decided", "decide", "implemented", "implement", "applies", "apply",
+    "introduced", "introduce", "enacted", "enact",
+    "government", "governments", "minister", "ministry", "ministries",
+    "parliament", "parliamentary", "chancellor", "president", "presidency",
+    "administration", "cabinet", "coalition",
+    "quota", "quotas", "regularization", "regularisation",
+    "deportation", "deportations", "naturalization", "naturalisation",
+    "asylum", "visa", "visas", "residence permit", "residency",
+    "amnesty", "expulsion", "expulsions", "readmission",
+    "agreement", "agreements", "treaty", "treaties",
+    "convention", "conventions", "pact", "pacts", "accord", "accords",
+    "protocol", "protocols",
+    "model", "models", "approach", "approaches", "system", "systems",
+    "example", "case", "experience",
 }
 
-SITUATION_MARKERS_FR = {
-    "crise", "crises", "flux", "vague", "vagues", "nombre", "nombres",
-    "arrivées", "arrivants", "morts", "noyades", "naufrage", "naufrages",
-    "camps", "camp", "situation", "événements", "guerre", "conflit",
-    "afflux", "exode", "drame", "tragédie", "tragédies",
-    "frontière", "frontières", "migrants", "réfugiés", "demandeurs",
-    "passeurs", "trafic", "Méditerranée", "Manche",
+# === Situation reference markers ===
+# Signals that the mention is about what happens to or at a country:
+# events, conditions, humanitarian situations.
+SITUATION_MARKERS_EN = {
+    "crisis", "crises", "emergency", "emergencies",
+    "wave", "waves", "flow", "flows", "influx", "exodus",
+    "surge", "surges", "tide",
+    "number", "numbers", "arrivals", "arriving",
+    "departures", "departing", "newcomers",
+    "dead", "deaths", "drowned", "drownings", "drowning",
+    "shipwreck", "shipwrecks", "tragedy", "tragedies",
+    "victims", "victim", "killed", "lost their lives",
+    "camp", "camps", "border", "borders", "frontier", "frontiers",
+    "reception centre", "reception center", "detention",
+    "checkpoint", "crossing", "crossings",
+    "migrants", "refugees", "asylum seekers", "asylum-seekers",
+    "displaced", "displacement", "smugglers", "trafficking",
+    "unaccompanied minors",
+    "war", "conflict", "conflicts", "civil war",
+    "famine", "drought", "persecution",
+    "situation", "events", "happenings",
+    "the Mediterranean", "Mediterranean", "Channel", "the Channel",
+    "Lampedusa", "Lesbos", "Moria",
 }
 
 
 def _count_marker_hits(text: str, markers: set[str]) -> int:
-    """Count how many distinct markers appear in the text (case-insensitive)."""
+    """Count distinct markers appearing in the text (case-insensitive)."""
     if not isinstance(text, str) or not text:
         return 0
     lower = text.lower()
-    return sum(1 for m in markers if m in lower)
+    return sum(1 for marker in markers if marker.lower() in lower)
 
 
 def classify_reference_type(window: str) -> str:
-    """Classify a context window as policy / situation / mixed / neutral.
-
-    Heuristic for the pilot. Replace with a trained classifier
-    once you have a manually-coded training sample.
-    """
+    """Classify a context window as policy / situation / mixed / neutral."""
     if not isinstance(window, str) or not window.strip():
         return "unknown"
 
-    policy_hits = _count_marker_hits(window, POLICY_MARKERS_FR)
-    situation_hits = _count_marker_hits(window, SITUATION_MARKERS_FR)
+    policy_hits = _count_marker_hits(window, POLICY_MARKERS_EN)
+    situation_hits = _count_marker_hits(window, SITUATION_MARKERS_EN)
 
     if policy_hits == 0 and situation_hits == 0:
         return "neutral_reference"
@@ -64,12 +88,7 @@ def classify_reference_type(window: str) -> str:
 
 
 def bucket_sentiment(value: float | None, label: str | None) -> str:
-    """Collapse continuous sentiment + categorical label into 3 buckets.
-
-    ParlaMint provides both a numeric value and a categorical 'ana' tag
-    (e.g. senti:positive, senti:negative, senti:neutral, senti:mixpos, senti:mixneg).
-    We rely primarily on the value with the label as a tiebreaker.
-    """
+    """Collapse numeric sentiment + categorical label into 3 buckets."""
     if value is None:
         if label is None:
             return "neutral"
@@ -87,7 +106,7 @@ def bucket_sentiment(value: float | None, label: str | None) -> str:
 
 
 def apply_typology(df: pl.DataFrame) -> pl.DataFrame:
-    """Apply both axes (reference_type, sentiment_bucket) to the dataframe."""
+    """Apply reference type and sentiment bucket to each mention."""
     return df.with_columns([
         pl.col("context_window")
         .map_elements(classify_reference_type, return_dtype=pl.Utf8)
@@ -119,7 +138,7 @@ def build_2x3_matrix(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def matrix_by_country(df: pl.DataFrame, min_mentions: int = 5) -> pl.DataFrame:
-    """Per-country breakdown of the 2x3 matrix. Useful for top mentioned countries."""
+    """Per-country breakdown of the 2x3 matrix."""
     return (
         df
         .group_by(["entity_content", "ref_type", "sentiment_bucket"])
