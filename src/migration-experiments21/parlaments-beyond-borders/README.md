@@ -17,6 +17,21 @@ Each foreign-country mention is classified along two axes:
 - **Reference type**: policy / situation / mixed / neutral
 - **Sentiment**: positive / negative / neutral
 
+Sentiment buckets are based on ParlaMint's categorical
+`sentence_sentiment_ana` labels:
+
+- **negative**: `senti:negneg`, `senti:mixneg`
+- **neutral**: `senti:neuneg`, `senti:neupos`
+- **positive**: `senti:mixpos`, `senti:pospos`
+
+The numeric `sentence_sentiment_value` is kept in the output for inspection,
+but it is not centered at zero in this file, so it should not be interpreted
+with a simple negative/positive zero threshold.
+
+French overseas territories such as Mayotte and French Guiana are kept in the
+analysis because they are important in migration debates, but they are marked
+as `geo_class = french_overseas`. They are not foreign states.
+
 ## Data
 
 ParlaMint extracted parquet files. Not committed to the repo.

@@ -26,6 +26,8 @@ def show_top_countries(
         .group_by("entity_content")
         .agg([
             pl.len().alias("n_mentions"),
+            # Explanation: Mark whether an entity is a foreign state or French overseas.
+            pl.col("geo_class").first().alias("geo_class"),
             pl.col("sentence_sentiment_value").mean().round(3).alias("avg_sentiment"),
             pl.col("sentence_sentiment_value").std().round(3).alias("std_sentiment"),
             pl.col("sentence_sentiment_value").min().alias("min_sentiment"),

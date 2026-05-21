@@ -8,6 +8,23 @@ from __future__ import annotations
 import polars as pl
 
 
+SENTIMENT_LABEL_BUCKETS = {
+    # Explanation: The ParlaMint-en.ana numeric sentiment value is not centered at zero
+    # in this file, so the categorical label is the clearest source for 3 buckets.
+    "senti:negneg": "negative",
+    "senti:mixneg": "negative",
+    "senti:neuneg": "neutral",
+    "senti:neupos": "neutral",
+    "senti:mixpos": "positive",
+    "senti:pospos": "positive",
+    "senti:negative": "negative",
+    "senti:positive": "positive",
+    "senti:neutral": "neutral",
+    "senti:neg": "negative",
+    "senti:pos": "positive",
+}
+
+
 # === Policy reference markers ===
 # Signals that the mention is about what a country does legislatively,
 # administratively, or institutionally.
@@ -95,16 +112,12 @@ def classify_reference_type(window: str) -> str:
 
 def bucket_sentiment(value: float | None, label: str | None) -> str:
     """Collapse numeric sentiment + categorical label into 3 buckets."""
-    # Explanation: Prefer the numeric sentiment value; fall back to the label when missing.
+    # Explanation: Prefer ParlaMint's categorical sentiment label when it is available.
+    if label in SENTIMENT_LABEL_BUCKETS:
+        return SENTIMENT_LABEL_BUCKETS[label]
+    # Explanation: Fall back to the numeric value only for rows without a known label.
     if value is None:
-        if label is None:
-            return "neutral"
-        if "positive" in label or label == "senti:pos":
-            return "positive"
-        if "negative" in label or label == "senti:neg":
-            return "negative"
         return "neutral"
-
     if value >= 1.0:
         return "positive"
     if value <= -1.0:

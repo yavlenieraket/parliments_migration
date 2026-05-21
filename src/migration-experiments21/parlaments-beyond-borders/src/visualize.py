@@ -51,6 +51,29 @@ def top_entities(df: pl.DataFrame, top_n: int = 15) -> list[str]:
     )
 
 
+def entity_display_labels(df: pl.DataFrame, entities: list[str]) -> dict[str, str]:
+    """Return labels that mark French overseas territories explicitly."""
+    # Explanation: Overseas territories are politically French, not foreign states.
+    geo_lookup = {
+        row["entity_content"]: row["geo_class"]
+        for row in (
+            df
+            .filter(pl.col("entity_content").is_in(entities))
+            .select(["entity_content", "geo_class"])
+            .unique()
+            .to_dicts()
+        )
+    }
+    return {
+        entity: (
+            f"{entity} (French overseas)"
+            if geo_lookup.get(entity) == "french_overseas"
+            else entity
+        )
+        for entity in entities
+    }
+
+
 def _complete_count_table(
     df: pl.DataFrame,
     category_column: str,
@@ -87,8 +110,10 @@ def plot_country_sentiment_mentions(
     """Plot top countries by positive/negative/neutral migration mentions."""
     # Explanation: Pick the countries before counting sentiment, so all charts align.
     entities = top_entities(df, top_n=top_n)
+    labels = entity_display_labels(df, entities)
     table = _complete_count_table(df, "sentiment_bucket", SENTIMENT_ORDER, entities)
     plot_df = table.set_index("entity_content").loc[entities]
+    plot_df.index = [labels[entity] for entity in plot_df.index]
 
     # Explanation: Horizontal stacked bars keep country names readable.
     ax = plot_df.plot(
@@ -98,7 +123,7 @@ def plot_country_sentiment_mentions(
         color=[SENTIMENT_COLORS[col] for col in plot_df.columns],
     )
     ax.invert_yaxis()
-    ax.set_title("Foreign-country mentions in France 2018 migration debates")
+    ax.set_title("Mentions in France 2018 migration debates")
     ax.set_xlabel("Number of mentions")
     ax.set_ylabel("Mentioned entity")
     ax.legend(title="Sentiment", loc="lower right")
@@ -116,8 +141,10 @@ def plot_country_reference_mentions(
     """Plot top countries by policy/situation/mixed/neutral reference type."""
     # Explanation: This shows whether a country is used as a policy comparison or context.
     entities = top_entities(df, top_n=top_n)
+    labels = entity_display_labels(df, entities)
     table = _complete_count_table(df, "ref_type", REF_TYPE_ORDER, entities)
     plot_df = table.set_index("entity_content").loc[entities]
+    plot_df.index = [labels[entity] for entity in plot_df.index]
 
     ax = plot_df.plot(
         kind="barh",
@@ -144,6 +171,7 @@ def plot_policy_situation_sentiment(
     """Plot sentiment colors separately for policy and situation/context mentions."""
     # Explanation: This directly compares policy talk with international situation context.
     entities = top_entities(df, top_n=top_n)
+    labels = entity_display_labels(df, entities)
     filtered = df.filter(
         pl.col("entity_content").is_in(entities)
         & pl.col("ref_type").is_in(["policy", "situation"])
@@ -171,6 +199,7 @@ def plot_policy_situation_sentiment(
             .pivot(index="entity_content", columns="sentiment_bucket", values="n")
             .loc[entities, SENTIMENT_ORDER]
         )
+        panel.index = [labels[entity] for entity in panel.index]
         panel.plot(
             kind="barh",
             stacked=True,
@@ -198,8 +227,10 @@ def plot_reference_heatmap(
     """Plot a heatmap of mentioned entities by reference type."""
     # Explanation: The heatmap makes each country's dominant mode of mention visible at a glance.
     entities = top_entities(df, top_n=top_n)
+    labels = entity_display_labels(df, entities)
     table = _complete_count_table(df, "ref_type", REF_TYPE_ORDER, entities)
     heatmap_df = table.set_index("entity_content").loc[entities, REF_TYPE_ORDER]
+    heatmap_df.index = [labels[entity] for entity in heatmap_df.index]
 
     plt.figure(figsize=(9, 7))
     sns.heatmap(
