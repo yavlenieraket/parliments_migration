@@ -66,6 +66,8 @@ It also saves four visualization files here:
 - `data/processed/figures/entity_distribution_top10.png` - distribution chart for the 10 most mentioned countries/cases
 - `data/processed/figures/entity_distribution_min26.png` - all entities mentioned more than 25 times; entities with 25 or fewer mentions are not shown
 - `data/processed/figures/country_sentiment_mentions_top10.png` - top 10 entities colored by positive / negative / neutral sentiment
+- `data/processed/figures/entity_sentiment_heatmap_min26.png` - sentiment heatmap for every entity mentioned more than 25 times
+- `data/processed/figures/entity_distribution_heatmap_min26.png` - mention-volume heatmap for every entity mentioned more than 25 times
 - `data/processed/figures/country_reference_type_mentions_top10.png` - top 10 entities split by policy / situation / mixed / neutral reference type
 - `data/processed/figures/policy_vs_situation_sentiment_top10.png` - top 10 sentiment-colored comparison of policy references versus international situation/context references
 - `data/processed/figures/policy_situation_sentiment_heatmap.png` - heatmap of positive / negative / neutral sentiment for policy vs situation references

@@ -302,6 +302,78 @@ def plot_country_sentiment_mentions(
     return output_path
 
 
+def plot_entity_sentiment_heatmap(
+    df: pl.DataFrame,
+    output_path: Path,
+    min_mentions: int = 26,
+) -> Path:
+    """Plot a heatmap of sentiment by mentioned entity."""
+    # Explanation: Use the same >25 threshold as the main distribution chart.
+    entities = (
+        entity_distribution_table(df, min_mentions=min_mentions)
+        .get_column("entity_content")
+        .to_list()
+    )
+    labels = entity_display_labels(df, entities)
+    table = _complete_count_table(df, "sentiment_bucket", SENTIMENT_ORDER, entities)
+    heatmap_df = table.set_index("entity_content").loc[entities, SENTIMENT_ORDER]
+    heatmap_df.index = [labels[entity] for entity in heatmap_df.index]
+
+    plt.figure(figsize=(8, max(5, len(entities) * 0.45)))
+    sns.heatmap(
+        heatmap_df,
+        annot=True,
+        fmt="d",
+        cmap="RdYlGn_r",
+        linewidths=0.5,
+        cbar_kws={"label": "Mentions"},
+    )
+    plt.title("Sentiment heatmap by mentioned entity (>25 mentions)")
+    plt.xlabel("Sentiment")
+    plt.ylabel("Mentioned entity")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=220)
+    plt.close()
+    return output_path
+
+
+def plot_entity_distribution_heatmap(
+    df: pl.DataFrame,
+    output_path: Path,
+    min_mentions: int = 26,
+) -> Path:
+    """Plot a one-column heatmap of mention volume by entity."""
+    # Explanation: This is the distribution chart as a heatmap, using the same threshold.
+    distribution = entity_distribution_table(df, min_mentions=min_mentions)
+    entities = distribution.get_column("entity_content").to_list()
+    labels = entity_display_labels(df, entities)
+    heatmap_df = (
+        distribution
+        .select(["entity_content", "n_mentions"])
+        .to_pandas()
+        .set_index("entity_content")
+        .loc[entities]
+    )
+    heatmap_df.index = [labels[entity] for entity in heatmap_df.index]
+
+    plt.figure(figsize=(6.5, max(5, len(entities) * 0.45)))
+    sns.heatmap(
+        heatmap_df,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        linewidths=0.5,
+        cbar_kws={"label": "Mentions"},
+    )
+    plt.title("Mention distribution heatmap (>25 mentions)")
+    plt.xlabel("")
+    plt.ylabel("Mentioned entity")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=220)
+    plt.close()
+    return output_path
+
+
 def plot_country_reference_mentions(
     df: pl.DataFrame,
     output_path: Path,
@@ -489,6 +561,16 @@ def save_all_figures(
             df,
             figures_dir / "country_sentiment_mentions_top10.png",
             top_n=top_n,
+        ),
+        "entity_sentiment_heatmap_min26": plot_entity_sentiment_heatmap(
+            df,
+            figures_dir / "entity_sentiment_heatmap_min26.png",
+            min_mentions=min_mentions_for_all,
+        ),
+        "entity_distribution_heatmap_min26": plot_entity_distribution_heatmap(
+            df,
+            figures_dir / "entity_distribution_heatmap_min26.png",
+            min_mentions=min_mentions_for_all,
         ),
         "country_reference_type": plot_country_reference_mentions(
             df,
