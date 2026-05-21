@@ -98,6 +98,17 @@ def save_entity_distribution_table(df: pl.DataFrame, output_path: Path) -> Path:
     return output_path
 
 
+def save_significant_entity_distribution_table(
+    df: pl.DataFrame,
+    output_path: Path,
+    min_mentions: int = 50,
+) -> Path:
+    """Save the distribution for entities that meet the minimum mention threshold."""
+    # Explanation: This matches the displayed "everything above threshold" chart.
+    entity_distribution_table(df, min_mentions=min_mentions).write_csv(output_path)
+    return output_path
+
+
 def _complete_count_table(
     df: pl.DataFrame,
     category_column: str,
@@ -130,10 +141,11 @@ def plot_entity_distribution(
     df: pl.DataFrame,
     output_path: Path,
     top_n: int | None = 40,
+    min_mentions: int = 1,
 ) -> Path:
     """Plot total migration mentions by country/territory entity."""
-    # Explanation: top_n=None creates the full all-entities chart; top_n=40 is readable.
-    distribution = entity_distribution_table(df)
+    # Explanation: min_mentions removes low-frequency entities from the displayed chart.
+    distribution = entity_distribution_table(df, min_mentions=min_mentions)
     if top_n is not None:
         distribution = distribution.head(top_n)
 
@@ -322,44 +334,51 @@ def plot_reference_heatmap(
 def save_all_figures(
     df: pl.DataFrame,
     processed_dir: Path,
-    top_n: int = 15,
+    top_n: int = 10,
+    min_mentions_for_all: int = 50,
 ) -> dict[str, Path]:
     """Create every pilot visualization and return the saved file paths."""
     # Explanation: One function lets notebook users regenerate all figures consistently.
     figures_dir = ensure_figures_dir(processed_dir)
     return {
-        "entity_distribution_top40": plot_entity_distribution(
+        "entity_distribution_top10": plot_entity_distribution(
             df,
-            figures_dir / "entity_distribution_top40.png",
-            top_n=40,
+            figures_dir / "entity_distribution_top10.png",
+            top_n=10,
         ),
-        "entity_distribution_all": plot_entity_distribution(
+        "entity_distribution_min50": plot_entity_distribution(
             df,
-            figures_dir / "entity_distribution_all.png",
+            figures_dir / "entity_distribution_min50.png",
             top_n=None,
+            min_mentions=min_mentions_for_all,
         ),
-        "entity_distribution_csv": save_entity_distribution_table(
+        "entity_distribution_min50_csv": save_significant_entity_distribution_table(
             df,
-            processed_dir / "entity_distribution_all.csv",
+            processed_dir / "entity_distribution_min50.csv",
+            min_mentions=min_mentions_for_all,
+        ),
+        "entity_distribution_all_csv": save_entity_distribution_table(
+            df,
+            processed_dir / "entity_distribution_all_for_audit.csv",
         ),
         "country_sentiment": plot_country_sentiment_mentions(
             df,
-            figures_dir / "country_sentiment_mentions.png",
+            figures_dir / "country_sentiment_mentions_top10.png",
             top_n=top_n,
         ),
         "country_reference_type": plot_country_reference_mentions(
             df,
-            figures_dir / "country_reference_type_mentions.png",
+            figures_dir / "country_reference_type_mentions_top10.png",
             top_n=top_n,
         ),
         "policy_vs_situation_sentiment": plot_policy_situation_sentiment(
             df,
-            figures_dir / "policy_vs_situation_sentiment.png",
-            top_n=min(top_n, 12),
+            figures_dir / "policy_vs_situation_sentiment_top10.png",
+            top_n=top_n,
         ),
         "reference_heatmap": plot_reference_heatmap(
             df,
-            figures_dir / "country_reference_heatmap.png",
+            figures_dir / "country_reference_heatmap_top10.png",
             top_n=top_n,
         ),
     }
