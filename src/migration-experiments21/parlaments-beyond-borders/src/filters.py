@@ -6,6 +6,8 @@ from src.config import EXCLUDE_FROM_FOREIGN, FRENCH_OVERSEAS, MIGRATION_TOPIC
 
 
 COUNTRY_ALIASES = {
+    # Explanation: These variants appear because the corpus is translated to English
+    # but some original French/German/Italian surface forms still survive in NER.
     "Allemagne": "Germany",
     "Deutschland": "Germany",
     "Federal Republic of Germany": "Germany",
@@ -52,16 +54,19 @@ COUNTRY_ALIASES = {
 
 def filter_migration(lf: pl.LazyFrame) -> pl.LazyFrame:
     """Keep only rows from speeches tagged as immigration (CAP topic 9)."""
+    # Explanation: The parquet stores the immigration CAP topic as the code "immig".
     return lf.filter(pl.col("debate_topic") == MIGRATION_TOPIC)
 
 
 def filter_country_mentions(lf: pl.LazyFrame) -> pl.LazyFrame:
     """Keep only LOC entities (countries, cities, geographic locations)."""
+    # Explanation: We start broad with LOC, then remove domestic/non-country terms later.
     return lf.filter(pl.col("entity_category") == "LOC")
 
 
 def normalize_country_names(lf: pl.LazyFrame) -> pl.LazyFrame:
     """Merge known country-name variants into a canonical English form."""
+    # Explanation: Start from the original entity and overwrite only known aliases.
     expr = pl.col("entity_content")
     for variant, canonical in COUNTRY_ALIASES.items():
         expr = (
@@ -77,11 +82,13 @@ def filter_foreign(lf: pl.LazyFrame) -> pl.LazyFrame:
 
     Overseas territories are kept but flagged separately (see add_geo_class).
     """
+    # Explanation: Remove France, French places, and non-country geographic regions.
     return lf.filter(~pl.col("entity_content").is_in(EXCLUDE_FROM_FOREIGN))
 
 
 def add_geo_class(lf: pl.LazyFrame) -> pl.LazyFrame:
     """Add a column distinguishing foreign countries from French overseas territories."""
+    # Explanation: Overseas territories are not foreign countries, but we keep them visible.
     return lf.with_columns(
         pl.when(pl.col("entity_content").is_in(FRENCH_OVERSEAS))
         .then(pl.lit("french_overseas"))
@@ -95,6 +102,7 @@ def build_context_window(lf: pl.LazyFrame) -> pl.LazyFrame:
 
     The separator '||' makes it easy to split back later if needed.
     """
+    # Explanation: Context is previous + current + next sentence for manual validation.
     return lf.with_columns(
         pl.concat_str([
             pl.col("sentence_content_previous").fill_null(""),
@@ -112,6 +120,7 @@ def build_migration_mentions(lf: pl.LazyFrame) -> pl.DataFrame:
 
     Returns an eagerly-collected DataFrame.
     """
+    # Explanation: The order matters: normalize names before excluding domestic terms.
     return (
         lf
         .pipe(filter_migration)

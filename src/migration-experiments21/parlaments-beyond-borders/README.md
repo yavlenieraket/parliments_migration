@@ -33,3 +33,16 @@ Place files at:
 pip install -r requirements.txt
 jupyter notebook notebooks/01_fra_2018_pilot.ipynb
 ```
+
+## Outputs
+
+The notebook saves the annotated mention table here:
+
+- `data/processed/FRA_2018_migration_mentions.parquet`
+
+It also saves four visualization files here:
+
+- `data/processed/figures/country_sentiment_mentions.png` - top mentioned entities colored by positive / negative / neutral sentiment
+- `data/processed/figures/country_reference_type_mentions.png` - top mentioned entities split by policy / situation / mixed / neutral reference type
+- `data/processed/figures/policy_vs_situation_sentiment.png` - sentiment-colored comparison of policy references versus international situation/context references
+- `data/processed/figures/country_reference_heatmap.png` - heatmap of reference-type intensity by mentioned entity
