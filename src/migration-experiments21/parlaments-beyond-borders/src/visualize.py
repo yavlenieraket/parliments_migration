@@ -7,6 +7,8 @@ from pathlib import Path
 import altair as alt
 import pandas as pd
 import polars as pl
+import plotly.express as px
+import plotly.graph_objects as go
 
 from src.typology import SENTIMENT_LABELS, SENTIMENT_LEVELS, build_matrix
 
@@ -121,6 +123,15 @@ def _save_chart(chart: alt.Chart, output_path: Path) -> Path:
             encoding="utf-8",
         )
         return html_path
+
+
+def _save_plotly(fig: go.Figure, output_path: Path) -> Path:
+    """Save a Plotly figure as interactive HTML."""
+    # Explanation: Plotly HTML works well for ternary plots, maps, and dense timelines.
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    html_path = output_path.with_suffix(".html")
+    fig.write_html(html_path, include_plotlyjs="cdn")
+    return html_path
 
 
 def top_entities(df: pl.DataFrame, top_n: int = 15) -> list[str]:
@@ -932,6 +943,286 @@ def save_extended_figures(
         "country_policy_heatmap": plot_country_policy_heatmap(
             edges,
             figures_dir / "country_policy_heatmap.png",
+        ),
+    }
+
+
+def plot_policy_agency_network(
+    agency_edges: pl.DataFrame,
+    output_path: Path,
+    top_n: int = 30,
+) -> Path:
+    """Save an interactive Altair node-link view of policy agency edges."""
+    # Explanation: This compact network centers France and shows how targets are
+    # mentioned as FROM models, TO pressure targets, competitors, partners, or neutral reports.
+    import networkx as nx
+
+    top_targets = (
+        agency_edges
+        .group_by("target_entity")
+        .agg(pl.col("weight").sum().alias("total_weight"))
+        .sort("total_weight", descending=True)
+        .head(top_n)
+        .get_column("target_entity")
+        .to_list()
+    )
+    filtered = agency_edges.filter(pl.col("target_entity").is_in(top_targets))
+    graph = nx.Graph()
+    graph.add_node("FRA")
+    for row in filtered.to_dicts():
+        graph.add_node(row["target_entity"])
+        graph.add_edge("FRA", row["target_entity"], weight=int(row["weight"]))
+    positions = nx.spring_layout(graph, seed=42, k=0.8)
+
+    node_weights = (
+        filtered
+        .group_by("target_entity")
+        .agg(pl.col("weight").sum().alias("total_weight"))
+        .to_pandas()
+    )
+    node_weight_lookup = dict(zip(node_weights["target_entity"], node_weights["total_weight"]))
+    nodes = pd.DataFrame([
+        {
+            "node": node,
+            "x": xy[0],
+            "y": xy[1],
+            "total_weight": node_weight_lookup.get(node, filtered.get_column("weight").sum()),
+            "node_type": "source" if node == "FRA" else "target",
+        }
+        for node, xy in positions.items()
+    ])
+
+    edges = filtered.to_pandas()
+    edges["x"] = edges["source_country"].map(lambda node: positions[node][0])
+    edges["y"] = edges["source_country"].map(lambda node: positions[node][1])
+    edges["x2"] = edges["target_entity"].map(lambda node: positions[node][0])
+    edges["y2"] = edges["target_entity"].map(lambda node: positions[node][1])
+
+    edge_layer = (
+        alt.Chart(edges)
+        .mark_rule(opacity=0.55)
+        .encode(
+            x="x:Q",
+            y="y:Q",
+            x2="x2:Q",
+            y2="y2:Q",
+            color=alt.Color("policy_agency_type:N", title="Policy agency"),
+            size=alt.Size("weight:Q", title="Weight", scale=alt.Scale(range=[0.5, 6])),
+            tooltip=[
+                alt.Tooltip("source_country:N", title="Source"),
+                alt.Tooltip("target_entity:N", title="Target"),
+                alt.Tooltip("policy_agency_type:N", title="Agency"),
+                alt.Tooltip("migrant_cohort:N", title="Cohort"),
+                alt.Tooltip("policy_measure:N", title="Policy measure"),
+                alt.Tooltip("weight:Q", title="Mentions"),
+                alt.Tooltip("agency_markers:N", title="Agency markers"),
+            ],
+        )
+    )
+    node_layer = (
+        alt.Chart(nodes)
+        .mark_circle(stroke="#222222", strokeWidth=0.7)
+        .encode(
+            x=alt.X("x:Q", axis=None),
+            y=alt.Y("y:Q", axis=None),
+            size=alt.Size("total_weight:Q", title="Target mentions", scale=alt.Scale(range=[150, 1800])),
+            color=alt.Color("node_type:N", title="Node type"),
+            tooltip=[
+                alt.Tooltip("node:N", title="Node"),
+                alt.Tooltip("total_weight:Q", title="Mentions"),
+            ],
+        )
+    )
+    text_layer = (
+        alt.Chart(nodes)
+        .mark_text(dx=8, dy=-8, fontSize=11)
+        .encode(x="x:Q", y="y:Q", text="node:N")
+    )
+    chart = (edge_layer + node_layer + text_layer).interactive().properties(
+        title="Policy Agency Network: France -> mentioned countries/entities",
+        width=820,
+        height=620,
+    )
+    return _save_chart(chart, output_path)
+
+
+def plot_policy_agency_country_heatmap(
+    agency_edges: pl.DataFrame,
+    output_path: Path,
+    top_n: int = 30,
+) -> Path:
+    """Save target country/entity x policy agency heatmap."""
+    targets = _top_targets_from_edges(
+        agency_edges.rename({"target_entity": "target_entity"}),
+        top_n=top_n,
+    )
+    plot_df = (
+        agency_edges
+        .filter(pl.col("target_entity").is_in(targets))
+        .group_by(["target_entity", "policy_agency_type"])
+        .agg(pl.col("weight").sum().alias("weight"))
+        .to_pandas()
+    )
+    base = alt.Chart(plot_df).encode(
+        x=alt.X("policy_agency_type:N", title="Policy agency"),
+        y=alt.Y("target_entity:N", title="Mentioned country/entity", sort=targets),
+        tooltip=[
+            alt.Tooltip("target_entity:N", title="Target"),
+            alt.Tooltip("policy_agency_type:N", title="Agency"),
+            alt.Tooltip("weight:Q", title="Mentions"),
+        ],
+    )
+    heatmap = base.mark_rect().encode(color=alt.Color("weight:Q", title="Mentions", scale=alt.Scale(scheme="purples")))
+    labels = base.mark_text(fontSize=9).encode(text=alt.Text("weight:Q"), color=alt.value("#111111"))
+    chart = (heatmap + labels).interactive().properties(
+        title="Which countries/entities are mentioned through which policy agency mechanisms?",
+        width=760,
+        height=max(360, 22 * len(targets)),
+    )
+    return _save_chart(chart, output_path)
+
+
+def plot_narrative_ternary(
+    df: pl.DataFrame,
+    output_path: Path,
+    min_mentions: int = 10,
+) -> Path:
+    """Save a Plotly ternary plot of positive/risk/administrative narrative flavor."""
+    # Explanation: Each point is a country/entity; coordinates are narrative polarity shares.
+    counts = (
+        df
+        .group_by(["entity_content", "narrative_polarity"])
+        .agg(pl.len().alias("n"))
+        .to_pandas()
+    )
+    pivot = counts.pivot(index="entity_content", columns="narrative_polarity", values="n").fillna(0)
+    for col in ["positive_sympathy", "positive_benefit", "negative_risk", "neutral_administrative"]:
+        if col not in pivot.columns:
+            pivot[col] = 0
+    pivot["positive"] = pivot["positive_sympathy"] + pivot["positive_benefit"]
+    pivot["negative"] = pivot["negative_risk"]
+    pivot["neutral"] = pivot["neutral_administrative"]
+    pivot["total"] = pivot[["positive", "negative", "neutral"]].sum(axis=1)
+    pivot = pivot[pivot["total"] >= min_mentions].reset_index()
+    for col in ["positive", "negative", "neutral"]:
+        pivot[f"{col}_share"] = pivot[col] / pivot["total"]
+
+    fig = px.scatter_ternary(
+        pivot,
+        a="positive_share",
+        b="negative_share",
+        c="neutral_share",
+        size="total",
+        hover_name="entity_content",
+        hover_data={"total": True, "positive_share": ":.2f", "negative_share": ":.2f", "neutral_share": ":.2f"},
+        title="Narrative Mirror: positive / risk / administrative framing by country/entity",
+    )
+    fig.update_layout(ternary_sum=1)
+    return _save_plotly(fig, output_path)
+
+
+def plot_evidence_visibility_map(
+    visible_summary: pl.DataFrame,
+    output_path: Path,
+) -> Path:
+    """Save a Plotly choropleth of high-concreteness visible country mentions."""
+    # Explanation: This shows which real-world countries become concrete evidence points.
+    plot_df = (
+        visible_summary
+        .drop_nulls("target_iso3")
+        .filter(pl.col("target_iso3") != "")
+        .to_pandas()
+    )
+    fig = px.choropleth(
+        plot_df,
+        locations="target_iso3",
+        color="visible_event_mentions",
+        hover_name="entity_content",
+        hover_data={
+            "visible_event_mentions": True,
+            "mean_concreteness": True,
+            "dominant_frame": True,
+            "dominant_agency": True,
+            "target_iso3": False,
+        },
+        color_continuous_scale="YlOrRd",
+        title="Evidence-Visibility Map: high-concreteness country references",
+    )
+    fig.update_geos(showframe=False, showcoastlines=True, projection_type="natural earth")
+    return _save_plotly(fig, output_path)
+
+
+def plot_fact_density_timeline(
+    events: pl.DataFrame,
+    output_path: Path,
+    max_points: int = 1000,
+) -> Path:
+    """Save Plotly timeline of high-concreteness fact/event snippets."""
+    # Explanation: Points are concrete snippets; hover text shows named entities and frames.
+    plot_df = (
+        events
+        .sort("concreteness_score", descending=True)
+        .head(max_points)
+        .with_columns(
+            pl.col("context_window")
+            .map_elements(lambda text: " ".join(str(text).replace("||", " ").split())[:420], return_dtype=pl.Utf8)
+            .alias("context_excerpt")
+        )
+        .to_pandas()
+    )
+    fig = px.scatter(
+        plot_df,
+        x="session_date",
+        y="concreteness_score",
+        size="concreteness_score",
+        color="narrative_frame",
+        hover_name="entity_content",
+        hover_data={
+            "proper_noun_anchors": True,
+            "countries_detected_in_context": True,
+            "policy_agency_type": True,
+            "migrant_cohort": True,
+            "policy_measure": True,
+            "migration_direction": True,
+            "context_excerpt": True,
+            "concreteness_score": ":.3f",
+        },
+        title="Fact-Density Timeline: high-concreteness migration references",
+    )
+    fig.update_layout(xaxis_title="Session date", yaxis_title="Concreteness score")
+    return _save_plotly(fig, output_path)
+
+
+def save_advanced_figures(
+    df: pl.DataFrame,
+    agency_edges: pl.DataFrame,
+    events: pl.DataFrame,
+    visible_summary: pl.DataFrame,
+    processed_dir: Path,
+) -> dict[str, Path]:
+    """Save the deepest interactive figures for policy agency, narratives, and facts."""
+    figures_dir = processed_dir / "figures_interactive_advanced"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    return {
+        "policy_agency_network": plot_policy_agency_network(
+            agency_edges,
+            figures_dir / "policy_agency_network.png",
+        ),
+        "policy_agency_country_heatmap": plot_policy_agency_country_heatmap(
+            agency_edges,
+            figures_dir / "policy_agency_country_heatmap.png",
+        ),
+        "narrative_ternary": plot_narrative_ternary(
+            df,
+            figures_dir / "narrative_ternary.html",
+        ),
+        "evidence_visibility_map": plot_evidence_visibility_map(
+            visible_summary,
+            figures_dir / "evidence_visibility_map.html",
+        ),
+        "fact_density_timeline": plot_fact_density_timeline(
+            events,
+            figures_dir / "fact_density_timeline.html",
         ),
     }
 

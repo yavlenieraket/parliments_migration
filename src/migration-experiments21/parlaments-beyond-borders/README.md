@@ -4,11 +4,17 @@ DHH26 hackathon project analyzing how national parliaments reference
 foreign countries in migration debates. The pilot uses the translated
 `ParlaMint-en.ana` corpus, so entity names and typology markers are English.
 
-## Pilot scope
+## Scope
 
-France, year 2018 - chosen because the Collomb Law on immigration
-was debated and adopted that year, producing a dense and
-internationally-comparative migration discussion.
+The first pilot notebook covers France 2018. The extended notebook now covers
+all available France files from 2017 through 2022:
+
+- `FRA_2017_facts.parquet`
+- `FRA_2018_facts.parquet`
+- `FRA_2019_facts.parquet`
+- `FRA_2020_facts.parquet`
+- `FRA_2021_facts.parquet`
+- `FRA_2022_facts.parquet`
 
 ## Typology
 
@@ -67,16 +73,17 @@ jupyter notebook notebooks/02_fra_2017_2022_extended.ipynb
 For the conceptual framing, research questions, and validation logic, see
 `METHODOLOGY.md`.
 
-The extended notebook uses all available France files:
+The extended notebook uses all available France files and adds several analysis
+layers: concreteness, migrant cohorts, policy measures, policy agency,
+narrative framing, high-concreteness event extraction, and internal/external
+migration direction.
 
-- `FRA_2017_facts.parquet`
-- `FRA_2018_facts.parquet`
-- `FRA_2019_facts.parquet`
-- `FRA_2020_facts.parquet`
-- `FRA_2021_facts.parquet`
-- `FRA_2022_facts.parquet`
+### Country Reference Base
 
-It adds two analysis layers.
+Every row is a migration-related mention of another country, the EU, or a
+French overseas territory. French overseas territories are retained because
+they are substantively important, but they are labelled separately from foreign
+states with `geo_class = french_overseas`.
 
 ### Concreteness / Abstractness
 
@@ -114,6 +121,59 @@ It then builds a weighted directed network:
 - target node: mentioned country/entity
 - edge weight: number of mentions
 - edge attributes: year, migrant cohort, policy measure, reference type
+
+### Policy Agency Mechanisms
+
+`src/agency.py` classifies what another country/entity is doing in the argument:
+
+- `learning_emulation_from` - another country is used as a model or lesson
+- `coercion_intervention_to` - pressure, obligation, return, sanction, or rule
+  is directed toward another country
+- `competition` - France is compared against other countries for attractiveness
+  or strategic position
+- `exchange_cooperation` - treaties, partnerships, coordination, or joint action
+- `neutral_reporting` - descriptive reporting without clear policy agency
+
+The current labels are transparent keyword-rule labels with marker evidence.
+Each row also stores an LLM-ready prompt in `policy_agency_llm_prompt`, so the
+same schema can later be rerun with Qwen, Llama, or another zero-shot model
+without changing the downstream tables.
+
+### Narrative Framing and Argument Schemes
+
+`src/framing.py` adds a 61-frame narrative taxonomy for how migration is
+imagined: humanitarian obligation, security threat, economic contribution,
+economic burden, legal category, border crisis, policy model, sea rescue,
+camp conditions, and others.
+
+It also adds:
+
+- ternary narrative polarity: `positive_sympathy`, `positive_benefit`,
+  `negative_risk`, `neutral_administrative`
+- argumentative scheme: `argument_from_consequences`, `practical_reasoning`,
+  `conceptual_definition`, or `other`
+- extracted definition snippets when migration/refugee terms are defined with
+  patterns such as "migration is..." or "refugees are..."
+
+### High-Concreteness Events
+
+`src/events.py` extracts concrete evidence snippets from high-concreteness
+contexts. It records the date, mentioned country/entity, ISO3 target where
+available, proper-noun anchors, detected countries in the context, and the
+surrounding context window. This powers the evidence visibility map and the
+fact-density timeline.
+
+### Internal vs External Processes
+
+`src/direction.py` adds a surface semantic-role-style direction label:
+
+- `inbound_internal` - migration is directed toward France
+- `outbound_from_domestic` - migration is from France outward
+- `external_transnational` - migration is between third-party places
+- `ambiguous` - no reliable direction signal
+
+The current method uses auditable surface rules. A later version can replace
+this with full SRL while preserving the same output columns.
 
 ## Outputs
 
@@ -158,6 +218,10 @@ The extended notebook saves:
 - `data/processed/FRA_2017_2022_diffusion_edges.csv`
 - `data/processed/FRA_2017_2022_diffusion_target_summary.csv`
 - `data/processed/FRA_2017_2022_diffusion_network.graphml`
+- `data/processed/FRA_2017_2022_policy_agency_edges.csv`
+- `data/processed/FRA_2017_2022_policy_agency_network.graphml`
+- `data/processed/FRA_2017_2022_high_concreteness_events.csv`
+- `data/processed/FRA_2017_2022_visible_country_summary.csv`
 - `data/processed/figures_altair_extended/concreteness_density_by_weog.*`
 - `data/processed/figures_altair_extended/concreteness_by_year_region.*`
 - `data/processed/figures_altair_extended/diffusion_top_targets.*`
@@ -166,3 +230,15 @@ The extended notebook saves:
 - `data/processed/figures_altair_extended/country_year_concreteness_heatmap.*`
 - `data/processed/figures_altair_extended/country_cohort_heatmap.*`
 - `data/processed/figures_altair_extended/country_policy_heatmap.*`
+
+Advanced interactive figures are saved here:
+
+- `data/processed/figures_interactive_advanced/policy_agency_network.html`
+- `data/processed/figures_interactive_advanced/policy_agency_country_heatmap.html`
+- `data/processed/figures_interactive_advanced/narrative_ternary.html`
+- `data/processed/figures_interactive_advanced/evidence_visibility_map.html`
+- `data/processed/figures_interactive_advanced/fact_density_timeline.html`
+
+The `.html` files are the primary interactive outputs. Static PNG export is
+attempted where the chart type supports it; complex layered/network charts may
+save only HTML and Vega-Lite JSON.

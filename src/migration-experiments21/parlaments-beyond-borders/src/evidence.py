@@ -44,6 +44,10 @@ def country_mention_profile(df: pl.DataFrame, min_mentions: int = 10) -> pl.Data
             pl.col("sentiment_readable").mode().first().alias("dominant_sentiment"),
             pl.col("migrant_cohort").mode().first().alias("dominant_cohort"),
             pl.col("policy_measure").mode().first().alias("dominant_policy_measure"),
+            pl.col("policy_agency_type").mode().first().alias("dominant_policy_agency"),
+            pl.col("narrative_frame").mode().first().alias("dominant_narrative_frame"),
+            pl.col("narrative_polarity").mode().first().alias("dominant_narrative_polarity"),
+            pl.col("migration_direction").mode().first().alias("dominant_migration_direction"),
             pl.col("concrete_marker_hits").drop_nulls().unique().str.join(", ").alias("concrete_markers_seen"),
             pl.col("abstract_marker_hits").drop_nulls().unique().str.join(", ").alias("abstract_markers_seen"),
         ])
@@ -64,6 +68,9 @@ def yearly_country_profile(df: pl.DataFrame, min_mentions: int = 5) -> pl.DataFr
             pl.col("ref_type").mode().first().alias("dominant_ref_type"),
             pl.col("migrant_cohort").mode().first().alias("dominant_cohort"),
             pl.col("policy_measure").mode().first().alias("dominant_policy_measure"),
+            pl.col("policy_agency_type").mode().first().alias("dominant_policy_agency"),
+            pl.col("narrative_frame").mode().first().alias("dominant_narrative_frame"),
+            pl.col("migration_direction").mode().first().alias("dominant_migration_direction"),
         ])
         .filter(pl.col("n_mentions") >= min_mentions)
         .sort(["source_year", "n_mentions"], descending=[False, True])
@@ -117,6 +124,14 @@ def country_context_examples(
             "migrant_cohort_marker",
             "policy_measure",
             "policy_measure_marker",
+            "policy_agency_type",
+            "policy_agency_marker",
+            "narrative_frame",
+            "narrative_frame_marker",
+            "argument_scheme",
+            "migration_direction",
+            "flow_source_candidate",
+            "flow_destination_candidate",
             "concrete_marker_hits",
             "abstract_marker_hits",
             "context_excerpt",
@@ -171,6 +186,11 @@ def cohort_policy_context_examples(
             "sentiment_readable",
             "migrant_cohort_marker",
             "policy_measure_marker",
+            "policy_agency_type",
+            "policy_agency_marker",
+            "narrative_frame",
+            "argument_scheme",
+            "migration_direction",
             "context_excerpt",
             "sentence_id",
         ])
@@ -223,7 +243,9 @@ def build_result_notes(df: pl.DataFrame, edges: pl.DataFrame) -> str:
             f"mean concreteness {row['mean_concreteness']}, "
             f"dominant ref `{row['dominant_ref_type']}`, "
             f"dominant cohort `{row['dominant_cohort']}`, "
-            f"dominant policy `{row['dominant_policy_measure']}`."
+            f"dominant policy `{row['dominant_policy_measure']}`, "
+            f"dominant agency `{row['dominant_policy_agency']}`, "
+            f"dominant frame `{row['dominant_narrative_frame']}`."
         )
 
     lines.extend(["", "## Strongest Diffusion Targets"])

@@ -78,6 +78,104 @@ stored in the output. This makes the classifications auditable. A later version
 can replace these rules with zero-shot classifiers while preserving the same
 output schema.
 
+## Study 3: Policy Agency in Cross-Country References
+
+**Question.** When France mentions another country/entity in migration debates,
+is that target treated as a model to learn from, a target for pressure, a partner
+for cooperation, a competitor, or simply a location where events are reported?
+
+**Why this matters.** The project is not only counting country names. It asks
+what work those country names do inside parliamentary argument. The same target
+can appear as a model in one speech, a problem in another, and a cooperation
+partner in a third.
+
+**Operationalization.**
+
+- Add `policy_agency_type` to each mention:
+  `learning_emulation_from`, `coercion_intervention_to`, `competition`,
+  `exchange_cooperation`, or `neutral_reporting`.
+- Store `policy_agency_marker` so each classification can be audited.
+- Store `policy_agency_llm_prompt`, which can be sent to Qwen, Llama, or another
+  zero-shot model later.
+- Build a directed dyadic edge table:
+  source = `FRA`; target = mentioned country/entity; edge attributes include
+  agency type, migrant cohort, policy measure, reference type, and year.
+
+**Current implementation.**
+
+The current version is keyword-rule plus LLM-ready prompts. No external LLM is
+called in the notebook, so the output is reproducible offline. This is deliberate
+for the hackathon: it gives us a stable baseline and a direct path to replacing
+the rules with a stronger classifier.
+
+## Study 4: Narrative Framing and Migration Imagination
+
+**Question.** How is migration imagined when other countries are mentioned: as
+risk, obligation, benefit, administrative problem, legal category, crisis, or
+policy model?
+
+**Operationalization.**
+
+- Apply a 61-frame narrative taxonomy to each context window.
+- Collapse frames into a ternary plotting schema:
+  `positive_sympathy`, `positive_benefit`, `negative_risk`,
+  `neutral_administrative`.
+- Detect argumentative schemes:
+  `argument_from_consequences`, `practical_reasoning`,
+  `conceptual_definition`, or `other`.
+- Extract short definition candidates when migration/refugee terms are followed
+  by copular definition patterns such as "migration is..." or "refugees are...".
+
+**Current implementation.**
+
+The taxonomy is implemented as transparent phrase markers in `src/framing.py`.
+This is not yet a final narrative classifier. It is a precise audit layer that
+lets the team inspect which frames drive the result and which contexts should be
+manually validated.
+
+## Study 5: High-Concreteness Evidence and Event Visibility
+
+**Question.** Which other countries become visible as concrete evidence in
+French migration debate, rather than just abstract symbols?
+
+**Operationalization.**
+
+- Keep contexts with `concreteness_score >= 3.3`, the current pilot threshold for
+  `concrete_leaning`.
+- Extract dates, target entities, ISO3 codes, country mentions inside the context,
+  and proper-noun anchors.
+- Save a high-concreteness event table and a country visibility summary.
+- Visualize this as:
+  evidence visibility map;
+  fact-density timeline;
+  country x agency heatmap.
+
+**Current implementation.**
+
+Country extraction uses `country-named-entity-recognition`, which avoids common
+partial-match errors such as confusing `Niger` and `Nigeria`. Proper-noun anchors
+are lightweight event labels for tooltips and manual reading; they should be
+treated as evidence pointers, not final event extraction.
+
+## Study 6: Internal vs External Migration Processes
+
+**Question.** Is France discussing migration into France, migration out of
+France, or migration between other countries?
+
+**Operationalization.**
+
+- Add `flow_source_candidate` and `flow_destination_candidate` from surface
+  source/destination patterns.
+- Add `migration_direction`:
+  `inbound_internal`, `outbound_from_domestic`, `external_transnational`, or
+  `ambiguous`.
+
+**Current implementation.**
+
+This is a surface semantic-role-labeling substitute. It is good enough to split
+obvious internal and external cases for exploratory analysis, but it should be
+validated against hand-coded examples before being used as a final claim.
+
 ## What To Read First
 
 Open these outputs first:
@@ -86,10 +184,27 @@ Open these outputs first:
 - `data/processed/FRA_2017_2022_country_mention_profile.csv`
 - `data/processed/FRA_2017_2022_country_context_examples.csv`
 - `data/processed/FRA_2017_2022_cohort_policy_context_examples.csv`
+- `data/processed/FRA_2017_2022_policy_agency_edges.csv`
+- `data/processed/FRA_2017_2022_high_concreteness_events.csv`
+- `data/processed/FRA_2017_2022_visible_country_summary.csv`
+- `data/processed/figures_interactive_advanced/policy_agency_network.html`
+- `data/processed/figures_interactive_advanced/policy_agency_country_heatmap.html`
+- `data/processed/figures_interactive_advanced/narrative_ternary.html`
+- `data/processed/figures_interactive_advanced/evidence_visibility_map.html`
+- `data/processed/figures_interactive_advanced/fact_density_timeline.html`
 - `data/processed/figures_altair_extended/country_concreteness_bubble.html`
 - `data/processed/figures_altair_extended/country_year_concreteness_heatmap.html`
 - `data/processed/figures_altair_extended/country_cohort_heatmap.html`
 - `data/processed/figures_altair_extended/country_policy_heatmap.html`
+
+## Current Run Snapshot
+
+After executing `notebooks/02_fra_2017_2022_extended.ipynb`, the current local
+run retained 4,256 migration country/entity mentions. The largest policy-agency
+category is `neutral_reporting`, followed by `learning_emulation_from`,
+`coercion_intervention_to`, and `exchange_cooperation`. The directional split is
+dominated by `external_transnational`, which is exactly why the project needs
+cross-country reference analysis rather than only domestic migration analysis.
 
 ## Literature Anchors
 
