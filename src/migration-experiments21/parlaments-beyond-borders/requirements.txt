@@ -1,6 +1,6 @@
 polars>=0.20
 pyarrow>=14.0
 pandas>=2.0
-matplotlib>=3.8
-seaborn>=0.13
+altair>=6.0
+vl-convert-python>=1.9
 jupyter>=1.0

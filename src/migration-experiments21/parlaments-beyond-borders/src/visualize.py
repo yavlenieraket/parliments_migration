@@ -1,20 +1,27 @@
-"""Visualization helpers for the France 2018 migration pilot."""
+"""Vega-Altair visualization helpers for the France 2018 migration pilot."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-import matplotlib.pyplot as plt
+import altair as alt
 import pandas as pd
 import polars as pl
-import seaborn as sns
+
+from src.typology import SENTIMENT_LABELS, SENTIMENT_LEVELS, build_matrix
 
 
-# Explanation: Keep sentiment colors stable across every figure.
+# Explanation: Disable Altair's row limit because the pilot tables can exceed 5,000 rows.
+alt.data_transformers.disable_max_rows()
+
+# Explanation: Keep the 6-level sentiment colors stable across every figure.
 SENTIMENT_COLORS = {
-    "positive": "#1d9e75",
-    "negative": "#a32d2d",
-    "neutral": "#888780",
+    "senti:negneg": "#7f1d1d",
+    "senti:mixneg": "#c2410c",
+    "senti:neuneg": "#9ca3af",
+    "senti:neupos": "#a3a3a3",
+    "senti:mixpos": "#15803d",
+    "senti:pospos": "#14532d",
 }
 
 # Explanation: Reference-type colors separate policy talk from situation/context talk.
@@ -41,7 +48,7 @@ REGION_GROUP_LABELS = {
 }
 
 # Explanation: Fixed category orders make comparisons stable across notebook reruns.
-SENTIMENT_ORDER = ["positive", "negative", "neutral"]
+SENTIMENT_READABLE_ORDER = [SENTIMENT_LABELS[level] for level in SENTIMENT_LEVELS]
 REF_TYPE_ORDER = ["policy", "situation", "mixed", "neutral_reference", "unknown"]
 REGION_GROUP_ORDER = [
     "european_country",
@@ -52,16 +59,65 @@ REGION_GROUP_ORDER = [
 
 
 def ensure_figures_dir(processed_dir: Path) -> Path:
-    """Create and return the directory where plot images are saved."""
-    # Explanation: All generated figures live beside the processed parquet output.
-    figures_dir = processed_dir / "figures"
+    """Create and return the directory where Altair figures are saved."""
+    # Explanation: Altair outputs are kept separate from older matplotlib PNGs.
+    figures_dir = processed_dir / "figures_altair"
     figures_dir.mkdir(parents=True, exist_ok=True)
     return figures_dir
 
 
+def _sentiment_scale() -> alt.Scale:
+    """Return the shared sentiment color scale."""
+    # Explanation: The domain is the readable label order from strongest negative to positive.
+    return alt.Scale(
+        domain=SENTIMENT_READABLE_ORDER,
+        range=[SENTIMENT_COLORS[level] for level in SENTIMENT_LEVELS],
+    )
+
+
+def _ref_type_scale() -> alt.Scale:
+    """Return the shared reference-type color scale."""
+    return alt.Scale(
+        domain=REF_TYPE_ORDER,
+        range=[REF_TYPE_COLORS[level] for level in REF_TYPE_ORDER],
+    )
+
+
+def _region_group_scale() -> alt.Scale:
+    """Return the shared region-group color scale."""
+    return alt.Scale(
+        domain=[REGION_GROUP_LABELS[group] for group in REGION_GROUP_ORDER],
+        range=[REGION_GROUP_COLORS[group] for group in REGION_GROUP_ORDER],
+    )
+
+
+def _save_chart(chart: alt.Chart, output_path: Path) -> Path:
+    """Save a chart as HTML, Vega-Lite JSON, and PNG when possible."""
+    # Explanation: HTML is the safest interactive format; PNG is convenient for slides.
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    base = output_path.with_suffix("")
+    html_path = base.with_suffix(".html")
+    json_path = base.with_suffix(".vl.json")
+    png_path = base.with_suffix(".png")
+
+    chart.save(html_path)
+    chart.save(json_path)
+    try:
+        chart.save(png_path)
+        return png_path
+    except Exception as exc:
+        # Explanation: PNG export requires vl-convert-python; keep a small note if it fails.
+        note_path = base.with_suffix(".png_export_note.txt")
+        note_path.write_text(
+            f"PNG export failed. Open the interactive HTML instead.\n{exc}\n",
+            encoding="utf-8",
+        )
+        return html_path
+
+
 def top_entities(df: pl.DataFrame, top_n: int = 15) -> list[str]:
     """Return the most frequently mentioned entities."""
-    # Explanation: Visualizations use the same top-country universe for readability.
+    # Explanation: Visualizations use the same top-entity universe for readability.
     return (
         df
         .group_by("entity_content")
@@ -74,7 +130,7 @@ def top_entities(df: pl.DataFrame, top_n: int = 15) -> list[str]:
 
 
 def entity_display_labels(df: pl.DataFrame, entities: list[str]) -> dict[str, str]:
-    """Return labels that mark French overseas territories explicitly."""
+    """Return labels that mark French overseas territories and the EU explicitly."""
     # Explanation: Overseas territories are politically French, not foreign states.
     geo_lookup = {
         row["entity_content"]: row["geo_class"]
@@ -100,7 +156,7 @@ def entity_display_labels(df: pl.DataFrame, entities: list[str]) -> dict[str, st
 
 def entity_distribution_table(df: pl.DataFrame, min_mentions: int = 1) -> pl.DataFrame:
     """Return the complete distribution of mentioned entities."""
-    # Explanation: This table is the source for the distribution chart and CSV export.
+    # Explanation: This table is the source for distribution charts and CSV export.
     return (
         df
         .group_by(["entity_content", "geo_class", "region_group"])
@@ -123,22 +179,41 @@ def save_entity_distribution_table(df: pl.DataFrame, output_path: Path) -> Path:
 def save_significant_entity_distribution_table(
     df: pl.DataFrame,
     output_path: Path,
-    min_mentions: int = 50,
+    min_mentions: int = 26,
 ) -> Path:
-    """Save the distribution for entities that meet the minimum mention threshold."""
-    # Explanation: This matches the displayed "everything above threshold" chart.
+    """Save distribution for entities that meet the minimum mention threshold."""
+    # Explanation: min_mentions=26 means the displayed chart includes entities with >25 mentions.
     entity_distribution_table(df, min_mentions=min_mentions).write_csv(output_path)
     return output_path
 
 
-def _complete_count_table(
+def _add_display_columns(
+    pdf: pd.DataFrame,
+    df: pl.DataFrame,
+    entities: list[str] | None = None,
+) -> pd.DataFrame:
+    """Add display labels for entities, region groups, and sentiment levels."""
+    # Explanation: The data keeps analytical codes, while display columns keep charts readable.
+    pdf = pdf.copy()
+    if "entity_content" in pdf.columns:
+        chosen_entities = entities or pdf["entity_content"].drop_duplicates().tolist()
+        labels = entity_display_labels(df, chosen_entities)
+        pdf["display_entity"] = pdf["entity_content"].map(labels)
+    if "region_group" in pdf.columns:
+        pdf["region_group_readable"] = pdf["region_group"].map(REGION_GROUP_LABELS)
+    if "sentiment_level" in pdf.columns and "sentiment_readable" not in pdf.columns:
+        pdf["sentiment_readable"] = pdf["sentiment_level"].map(SENTIMENT_LABELS).fillna("unknown")
+    return pdf
+
+
+def _complete_count_long(
     df: pl.DataFrame,
     category_column: str,
     categories: list[str],
     entities: list[str],
 ) -> pd.DataFrame:
-    """Build a complete entity x category count table with zero-filled missing cells."""
-    # Explanation: Polars gives only observed combinations; plotting needs zero columns too.
+    """Build a complete entity x category count table with zero-filled cells."""
+    # Explanation: Polars returns only observed combinations; charts need explicit zeroes.
     counts = (
         df
         .filter(pl.col("entity_content").is_in(entities))
@@ -146,17 +221,17 @@ def _complete_count_table(
         .agg(pl.len().alias("n"))
         .to_pandas()
     )
-
-    # Explanation: A MultiIndex gives every country/category combination explicitly.
     index = pd.MultiIndex.from_product(
         [entities, categories],
         names=["entity_content", category_column],
     )
-    counts = counts.set_index(["entity_content", category_column]).reindex(index, fill_value=0)
-
-    # Explanation: The pivoted table is the direct input for stacked horizontal bars.
-    table = counts["n"].unstack(category_column).reset_index()
-    return table[["entity_content", *categories]]
+    counts = (
+        counts
+        .set_index(["entity_content", category_column])
+        .reindex(index, fill_value=0)
+        .reset_index()
+    )
+    return counts
 
 
 def plot_entity_distribution(
@@ -165,52 +240,46 @@ def plot_entity_distribution(
     top_n: int | None = 40,
     min_mentions: int = 1,
 ) -> Path:
-    """Plot total migration mentions by country/territory entity."""
+    """Save an Altair bar chart of total migration mentions by entity."""
     # Explanation: min_mentions removes low-frequency entities from the displayed chart.
     distribution = entity_distribution_table(df, min_mentions=min_mentions)
     if top_n is not None:
         distribution = distribution.head(top_n)
 
     entities = distribution.get_column("entity_content").to_list()
-    labels = entity_display_labels(df, entities)
-    plot_df = distribution.to_pandas()
-    plot_df["display_entity"] = plot_df["entity_content"].map(labels)
-    plot_df["bar_color"] = plot_df["geo_class"].map({
-        "foreign": "#4c78a8",
-        "french_overseas": REGION_GROUP_COLORS["french_overseas"],
-        "european_union": REGION_GROUP_COLORS["european_union"],
-    })
-    plot_df["bar_color"] = plot_df["region_group"].map(REGION_GROUP_COLORS).fillna(plot_df["bar_color"])
+    plot_df = _add_display_columns(distribution.to_pandas(), df, entities)
+    display_order = plot_df["display_entity"].tolist()
 
-    # Explanation: The figure height grows with the number of entities in the chart.
-    fig_height = max(7, len(plot_df) * 0.22)
-    fig, ax = plt.subplots(figsize=(11, fig_height))
-    ax.barh(
-        plot_df["display_entity"],
-        plot_df["n_mentions"],
-        color=plot_df["bar_color"],
+    chart = (
+        alt.Chart(plot_df)
+        .mark_bar()
+        .encode(
+            x=alt.X("n_mentions:Q", title="Number of mentions"),
+            y=alt.Y("display_entity:N", title="Mentioned entity", sort=display_order),
+            color=alt.Color(
+                "region_group_readable:N",
+                title="Analytical group",
+                scale=_region_group_scale(),
+            ),
+            tooltip=[
+                alt.Tooltip("display_entity:N", title="Entity"),
+                alt.Tooltip("region_group_readable:N", title="Group"),
+                alt.Tooltip("n_mentions:Q", title="Mentions"),
+                alt.Tooltip("share_percent:Q", title="Share (%)"),
+            ],
+        )
+        .properties(
+            title="Distribution of mentioned entities in France 2018 migration debates",
+            width=780,
+            height=max(280, 22 * len(plot_df)),
+        )
     )
-    ax.invert_yaxis()
-    ax.set_title("Distribution of mentioned entities in France 2018 migration debates")
-    ax.set_xlabel("Number of mentions")
-    ax.set_ylabel("Mentioned entity")
-
-    # Explanation: The legend clarifies that overseas territories are not foreign states.
-    handles = [
-        plt.Rectangle((0, 0), 1, 1, color=REGION_GROUP_COLORS[key], label=REGION_GROUP_LABELS[key])
-        for key in REGION_GROUP_ORDER
-    ]
-    ax.legend(handles=handles, loc="lower right")
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=160)
-    plt.close()
-    return output_path
+    return _save_chart(chart, output_path)
 
 
 def plot_region_group_distribution(df: pl.DataFrame, output_path: Path) -> Path:
-    """Plot mentions by European / non-European / EU / French overseas group."""
-    # Explanation: This answers whether France mentions European countries, non-European
-    # countries/cases, French overseas territories, or the European Union itself.
+    """Save an Altair chart of European / non-European / EU / overseas mentions."""
+    # Explanation: The EU and French overseas territories are not foreign states, so they stay separate.
     counts = (
         df
         .group_by("region_group")
@@ -218,57 +287,75 @@ def plot_region_group_distribution(df: pl.DataFrame, output_path: Path) -> Path:
         .to_pandas()
         .set_index("region_group")
         .reindex(REGION_GROUP_ORDER, fill_value=0)
+        .reset_index()
     )
-    counts["label"] = [REGION_GROUP_LABELS[group] for group in counts.index]
+    counts["region_group_readable"] = counts["region_group"].map(REGION_GROUP_LABELS)
 
-    fig, ax = plt.subplots(figsize=(9, 5))
-    ax.bar(
-        counts["label"],
-        counts["n_mentions"],
-        color=[REGION_GROUP_COLORS[group] for group in counts.index],
+    chart = (
+        alt.Chart(counts)
+        .mark_bar()
+        .encode(
+            x=alt.X("region_group_readable:N", title="Analytical group", sort=None),
+            y=alt.Y("n_mentions:Q", title="Number of mentions"),
+            color=alt.Color(
+                "region_group_readable:N",
+                title="Analytical group",
+                scale=_region_group_scale(),
+            ),
+            tooltip=[
+                alt.Tooltip("region_group_readable:N", title="Group"),
+                alt.Tooltip("n_mentions:Q", title="Mentions"),
+            ],
+        )
+        .properties(title="Mentions by European / non-European grouping", width=720, height=360)
     )
-    ax.set_title("Mentions by European / non-European grouping")
-    ax.set_xlabel("Analytical group")
-    ax.set_ylabel("Number of mentions")
-    ax.tick_params(axis="x", rotation=25)
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=200)
-    plt.close()
-    return output_path
+    return _save_chart(chart, output_path)
 
 
 def plot_region_group_sentiment(df: pl.DataFrame, output_path: Path) -> Path:
-    """Plot sentiment distribution by European / non-European / EU group."""
+    """Save an Altair stacked bar chart of 6-level sentiment by region group."""
     # Explanation: This shows whether sentiment differs by broad geography group.
     counts = (
         df
-        .group_by(["region_group", "sentiment_bucket"])
+        .group_by(["region_group", "sentiment_level"])
         .agg(pl.len().alias("n"))
         .to_pandas()
-        .set_index(["region_group", "sentiment_bucket"])
     )
     index = pd.MultiIndex.from_product(
-        [REGION_GROUP_ORDER, SENTIMENT_ORDER],
-        names=["region_group", "sentiment_bucket"],
+        [REGION_GROUP_ORDER, SENTIMENT_LEVELS],
+        names=["region_group", "sentiment_level"],
     )
-    table = counts.reindex(index, fill_value=0)["n"].unstack("sentiment_bucket")
-    table.index = [REGION_GROUP_LABELS[group] for group in table.index]
+    plot_df = counts.set_index(["region_group", "sentiment_level"]).reindex(index, fill_value=0).reset_index()
+    plot_df["region_group_readable"] = plot_df["region_group"].map(REGION_GROUP_LABELS)
+    plot_df["sentiment_readable"] = plot_df["sentiment_level"].map(SENTIMENT_LABELS)
+    plot_df["sentiment_order"] = plot_df["sentiment_level"].map(
+        {level: idx for idx, level in enumerate(SENTIMENT_LEVELS)}
+    )
 
-    ax = table[SENTIMENT_ORDER].plot(
-        kind="barh",
-        stacked=True,
-        figsize=(10, 5),
-        color=[SENTIMENT_COLORS[col] for col in SENTIMENT_ORDER],
+    chart = (
+        alt.Chart(plot_df)
+        .mark_bar()
+        .encode(
+            x=alt.X("n:Q", title="Number of mentions", stack="zero"),
+            y=alt.Y("region_group_readable:N", title="Analytical group", sort=[
+                REGION_GROUP_LABELS[group] for group in REGION_GROUP_ORDER
+            ]),
+            color=alt.Color(
+                "sentiment_readable:N",
+                title="Sentiment level",
+                scale=_sentiment_scale(),
+                sort=SENTIMENT_READABLE_ORDER,
+            ),
+            order=alt.Order("sentiment_order:Q"),
+            tooltip=[
+                alt.Tooltip("region_group_readable:N", title="Group"),
+                alt.Tooltip("sentiment_readable:N", title="Sentiment"),
+                alt.Tooltip("n:Q", title="Mentions"),
+            ],
+        )
+        .properties(title="6-level sentiment by European / non-European grouping", width=760, height=320)
     )
-    ax.invert_yaxis()
-    ax.set_title("Sentiment by European / non-European grouping")
-    ax.set_xlabel("Number of mentions")
-    ax.set_ylabel("Analytical group")
-    ax.legend(title="Sentiment", loc="lower right")
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=200)
-    plt.close()
-    return output_path
+    return _save_chart(chart, output_path)
 
 
 def plot_country_sentiment_mentions(
@@ -276,30 +363,39 @@ def plot_country_sentiment_mentions(
     output_path: Path,
     top_n: int = 15,
 ) -> Path:
-    """Plot top countries by positive/negative/neutral migration mentions."""
-    # Explanation: Pick the countries before counting sentiment, so all charts align.
+    """Save stacked Altair bars for top entities by 6-level sentiment."""
+    # Explanation: Pick entities before counting sentiment, so all charts align.
     entities = top_entities(df, top_n=top_n)
-    labels = entity_display_labels(df, entities)
-    table = _complete_count_table(df, "sentiment_bucket", SENTIMENT_ORDER, entities)
-    plot_df = table.set_index("entity_content").loc[entities]
-    plot_df.index = [labels[entity] for entity in plot_df.index]
-
-    # Explanation: Horizontal stacked bars keep country names readable.
-    ax = plot_df.plot(
-        kind="barh",
-        stacked=True,
-        figsize=(10, 7),
-        color=[SENTIMENT_COLORS[col] for col in plot_df.columns],
+    plot_df = _complete_count_long(df, "sentiment_level", SENTIMENT_LEVELS, entities)
+    plot_df = _add_display_columns(plot_df, df, entities)
+    plot_df["sentiment_readable"] = plot_df["sentiment_level"].map(SENTIMENT_LABELS)
+    plot_df["sentiment_order"] = plot_df["sentiment_level"].map(
+        {level: idx for idx, level in enumerate(SENTIMENT_LEVELS)}
     )
-    ax.invert_yaxis()
-    ax.set_title("Mentions in France 2018 migration debates")
-    ax.set_xlabel("Number of mentions")
-    ax.set_ylabel("Mentioned entity")
-    ax.legend(title="Sentiment", loc="lower right")
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=200)
-    plt.close()
-    return output_path
+    display_order = [entity_display_labels(df, entities)[entity] for entity in entities]
+
+    chart = (
+        alt.Chart(plot_df)
+        .mark_bar()
+        .encode(
+            x=alt.X("n:Q", title="Number of mentions", stack="zero"),
+            y=alt.Y("display_entity:N", title="Mentioned entity", sort=display_order),
+            color=alt.Color(
+                "sentiment_readable:N",
+                title="Sentiment level",
+                scale=_sentiment_scale(),
+                sort=SENTIMENT_READABLE_ORDER,
+            ),
+            order=alt.Order("sentiment_order:Q"),
+            tooltip=[
+                alt.Tooltip("display_entity:N", title="Entity"),
+                alt.Tooltip("sentiment_readable:N", title="Sentiment"),
+                alt.Tooltip("n:Q", title="Mentions"),
+            ],
+        )
+        .properties(title="6-level sentiment composition for top mentioned entities", width=780, height=320)
+    )
+    return _save_chart(chart, output_path)
 
 
 def plot_entity_sentiment_heatmap(
@@ -307,34 +403,41 @@ def plot_entity_sentiment_heatmap(
     output_path: Path,
     min_mentions: int = 26,
 ) -> Path:
-    """Plot a heatmap of sentiment by mentioned entity."""
-    # Explanation: Use the same >25 threshold as the main distribution chart.
-    entities = (
-        entity_distribution_table(df, min_mentions=min_mentions)
-        .get_column("entity_content")
-        .to_list()
-    )
-    labels = entity_display_labels(df, entities)
-    table = _complete_count_table(df, "sentiment_bucket", SENTIMENT_ORDER, entities)
-    heatmap_df = table.set_index("entity_content").loc[entities, SENTIMENT_ORDER]
-    heatmap_df.index = [labels[entity] for entity in heatmap_df.index]
+    """Save an Altair heatmap of 6-level sentiment by mentioned entity."""
+    # Explanation: min_mentions=26 means the heatmap includes all entities with >25 mentions.
+    entities = entity_distribution_table(df, min_mentions=min_mentions).get_column("entity_content").to_list()
+    return plot_country_x_sentiment_heatmap(df, entities, output_path)
 
-    plt.figure(figsize=(8, max(5, len(entities) * 0.45)))
-    sns.heatmap(
-        heatmap_df,
-        annot=True,
-        fmt="d",
-        cmap="RdYlGn_r",
-        linewidths=0.5,
-        cbar_kws={"label": "Mentions"},
+
+def plot_country_x_sentiment_heatmap(
+    df: pl.DataFrame,
+    countries: list[str],
+    output_path: Path,
+) -> Path:
+    """Save an Altair heatmap: entity x 6-level sentiment."""
+    # Explanation: This reveals which entities cluster at which negative/positive intensity.
+    plot_df = _complete_count_long(df, "sentiment_level", SENTIMENT_LEVELS, countries)
+    plot_df = _add_display_columns(plot_df, df, countries)
+    plot_df["sentiment_readable"] = plot_df["sentiment_level"].map(SENTIMENT_LABELS)
+    display_order = [entity_display_labels(df, countries)[entity] for entity in countries]
+
+    base = alt.Chart(plot_df).encode(
+        x=alt.X("sentiment_readable:N", title="Sentiment level", sort=SENTIMENT_READABLE_ORDER),
+        y=alt.Y("display_entity:N", title="Mentioned entity", sort=display_order),
+        tooltip=[
+            alt.Tooltip("display_entity:N", title="Entity"),
+            alt.Tooltip("sentiment_readable:N", title="Sentiment"),
+            alt.Tooltip("n:Q", title="Mentions"),
+        ],
     )
-    plt.title("Sentiment heatmap by mentioned entity (>25 mentions)")
-    plt.xlabel("Sentiment")
-    plt.ylabel("Mentioned entity")
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=220)
-    plt.close()
-    return output_path
+    heatmap = base.mark_rect().encode(color=alt.Color("n:Q", title="Mentions", scale=alt.Scale(scheme="redyellowgreen")))
+    labels = base.mark_text(fontSize=11).encode(text=alt.Text("n:Q"), color=alt.value("#111111"))
+    chart = (heatmap + labels).properties(
+        title="Mentioned entity x 6-level sentiment heatmap",
+        width=620,
+        height=max(260, 25 * len(countries)),
+    )
+    return _save_chart(chart, output_path)
 
 
 def plot_entity_distribution_heatmap(
@@ -342,36 +445,31 @@ def plot_entity_distribution_heatmap(
     output_path: Path,
     min_mentions: int = 26,
 ) -> Path:
-    """Plot a one-column heatmap of mention volume by entity."""
-    # Explanation: This is the distribution chart as a heatmap, using the same threshold.
+    """Save a one-column Altair heatmap of mention volume by entity."""
+    # Explanation: This is the distribution chart as a heatmap, using the same >25 threshold.
     distribution = entity_distribution_table(df, min_mentions=min_mentions)
     entities = distribution.get_column("entity_content").to_list()
-    labels = entity_display_labels(df, entities)
-    heatmap_df = (
-        distribution
-        .select(["entity_content", "n_mentions"])
-        .to_pandas()
-        .set_index("entity_content")
-        .loc[entities]
-    )
-    heatmap_df.index = [labels[entity] for entity in heatmap_df.index]
+    plot_df = _add_display_columns(distribution.to_pandas(), df, entities)
+    plot_df["metric"] = "mentions"
+    display_order = plot_df["display_entity"].tolist()
 
-    plt.figure(figsize=(6.5, max(5, len(entities) * 0.45)))
-    sns.heatmap(
-        heatmap_df,
-        annot=True,
-        fmt="d",
-        cmap="Blues",
-        linewidths=0.5,
-        cbar_kws={"label": "Mentions"},
+    base = alt.Chart(plot_df).encode(
+        x=alt.X("metric:N", title=""),
+        y=alt.Y("display_entity:N", title="Mentioned entity", sort=display_order),
+        tooltip=[
+            alt.Tooltip("display_entity:N", title="Entity"),
+            alt.Tooltip("n_mentions:Q", title="Mentions"),
+            alt.Tooltip("share_percent:Q", title="Share (%)"),
+        ],
     )
-    plt.title("Mention distribution heatmap (>25 mentions)")
-    plt.xlabel("")
-    plt.ylabel("Mentioned entity")
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=220)
-    plt.close()
-    return output_path
+    heatmap = base.mark_rect().encode(color=alt.Color("n_mentions:Q", title="Mentions", scale=alt.Scale(scheme="blues")))
+    labels = base.mark_text(fontSize=11).encode(text=alt.Text("n_mentions:Q"), color=alt.value("#111111"))
+    chart = (heatmap + labels).properties(
+        title="Mention distribution heatmap (>25 mentions)",
+        width=180,
+        height=max(260, 25 * len(plot_df)),
+    )
+    return _save_chart(chart, output_path)
 
 
 def plot_country_reference_mentions(
@@ -379,29 +477,33 @@ def plot_country_reference_mentions(
     output_path: Path,
     top_n: int = 15,
 ) -> Path:
-    """Plot top countries by policy/situation/mixed/neutral reference type."""
-    # Explanation: This shows whether a country is used as a policy comparison or context.
+    """Save stacked Altair bars for top entities by reference type."""
+    # Explanation: This shows whether a country is used as policy comparison or context.
     entities = top_entities(df, top_n=top_n)
-    labels = entity_display_labels(df, entities)
-    table = _complete_count_table(df, "ref_type", REF_TYPE_ORDER, entities)
-    plot_df = table.set_index("entity_content").loc[entities]
-    plot_df.index = [labels[entity] for entity in plot_df.index]
-
-    ax = plot_df.plot(
-        kind="barh",
-        stacked=True,
-        figsize=(10, 7),
-        color=[REF_TYPE_COLORS[col] for col in plot_df.columns],
+    plot_df = _complete_count_long(df, "ref_type", REF_TYPE_ORDER, entities)
+    plot_df = _add_display_columns(plot_df, df, entities)
+    plot_df["ref_type_order"] = plot_df["ref_type"].map(
+        {ref_type: idx for idx, ref_type in enumerate(REF_TYPE_ORDER)}
     )
-    ax.invert_yaxis()
-    ax.set_title("Policy vs situation references by mentioned entity")
-    ax.set_xlabel("Number of mentions")
-    ax.set_ylabel("Mentioned entity")
-    ax.legend(title="Reference type", loc="lower right")
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=200)
-    plt.close()
-    return output_path
+    display_order = [entity_display_labels(df, entities)[entity] for entity in entities]
+
+    chart = (
+        alt.Chart(plot_df)
+        .mark_bar()
+        .encode(
+            x=alt.X("n:Q", title="Number of mentions", stack="zero"),
+            y=alt.Y("display_entity:N", title="Mentioned entity", sort=display_order),
+            color=alt.Color("ref_type:N", title="Reference type", scale=_ref_type_scale(), sort=REF_TYPE_ORDER),
+            order=alt.Order("ref_type_order:Q"),
+            tooltip=[
+                alt.Tooltip("display_entity:N", title="Entity"),
+                alt.Tooltip("ref_type:N", title="Reference type"),
+                alt.Tooltip("n:Q", title="Mentions"),
+            ],
+        )
+        .properties(title="Policy vs situation references by mentioned entity", width=780, height=320)
+    )
+    return _save_chart(chart, output_path)
 
 
 def plot_policy_situation_sentiment(
@@ -409,91 +511,119 @@ def plot_policy_situation_sentiment(
     output_path: Path,
     top_n: int = 12,
 ) -> Path:
-    """Plot sentiment colors separately for policy and situation/context mentions."""
-    # Explanation: This directly compares policy talk with international situation context.
+    """Save Altair faceted bars for policy/situation mentions by sentiment."""
+    # Explanation: "Situation" operationalizes international context: crisis, borders, camps,
+    # war, refugees, routes, and other event/condition markers.
     entities = top_entities(df, top_n=top_n)
-    labels = entity_display_labels(df, entities)
     filtered = df.filter(
         pl.col("entity_content").is_in(entities)
         & pl.col("ref_type").is_in(["policy", "situation"])
     )
-
-    # Explanation: Create a full grid so missing negative values still appear in the legend.
     counts = (
         filtered
-        .group_by(["entity_content", "ref_type", "sentiment_bucket"])
+        .group_by(["entity_content", "ref_type", "sentiment_level"])
         .agg(pl.len().alias("n"))
         .to_pandas()
     )
     index = pd.MultiIndex.from_product(
-        [entities, ["policy", "situation"], SENTIMENT_ORDER],
-        names=["entity_content", "ref_type", "sentiment_bucket"],
+        [entities, ["policy", "situation"], SENTIMENT_LEVELS],
+        names=["entity_content", "ref_type", "sentiment_level"],
     )
-    counts = counts.set_index(["entity_content", "ref_type", "sentiment_bucket"]).reindex(index, fill_value=0)
-    plot_df = counts.reset_index()
+    plot_df = counts.set_index(["entity_content", "ref_type", "sentiment_level"]).reindex(index, fill_value=0).reset_index()
+    plot_df = _add_display_columns(plot_df, df, entities)
+    plot_df["sentiment_readable"] = plot_df["sentiment_level"].map(SENTIMENT_LABELS)
+    plot_df["sentiment_order"] = plot_df["sentiment_level"].map(
+        {level: idx for idx, level in enumerate(SENTIMENT_LEVELS)}
+    )
+    display_order = [entity_display_labels(df, entities)[entity] for entity in entities]
 
-    # Explanation: Two panels keep policy and situation readable without overloading one chart.
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(13, 7), sharey=True)
-    for ax, ref_type in zip(axes, ["policy", "situation"]):
-        panel = (
-            plot_df[plot_df["ref_type"] == ref_type]
-            .pivot(index="entity_content", columns="sentiment_bucket", values="n")
-            .loc[entities, SENTIMENT_ORDER]
+    chart = (
+        alt.Chart(plot_df)
+        .mark_bar()
+        .encode(
+            x=alt.X("n:Q", title="Number of mentions", stack="zero"),
+            y=alt.Y("display_entity:N", title="Mentioned entity", sort=display_order),
+            color=alt.Color(
+                "sentiment_readable:N",
+                title="Sentiment level",
+                scale=_sentiment_scale(),
+                sort=SENTIMENT_READABLE_ORDER,
+            ),
+            order=alt.Order("sentiment_order:Q"),
+            tooltip=[
+                alt.Tooltip("display_entity:N", title="Entity"),
+                alt.Tooltip("ref_type:N", title="Reference type"),
+                alt.Tooltip("sentiment_readable:N", title="Sentiment"),
+                alt.Tooltip("n:Q", title="Mentions"),
+            ],
         )
-        panel.index = [labels[entity] for entity in panel.index]
-        panel.plot(
-            kind="barh",
-            stacked=True,
-            ax=ax,
-            color=[SENTIMENT_COLORS[col] for col in SENTIMENT_ORDER],
-            legend=(ref_type == "situation"),
-        )
-        ax.invert_yaxis()
-        ax.set_title(f"{ref_type.title()} references")
-        ax.set_xlabel("Number of mentions")
-        ax.set_ylabel("Mentioned entity" if ref_type == "policy" else "")
-    axes[1].legend(title="Sentiment", loc="lower right")
-    fig.suptitle("Sentiment by country: policy vs international situation context")
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=200)
-    plt.close()
-    return output_path
+        .facet(column=alt.Column("ref_type:N", title="Reference type", sort=["policy", "situation"]))
+        .properties(title="6-level sentiment by entity: policy vs international situation context")
+        .resolve_scale(y="shared")
+    )
+    return _save_chart(chart, output_path)
 
 
 def plot_policy_situation_sentiment_heatmap(df: pl.DataFrame, output_path: Path) -> Path:
-    """Plot sentiment heatmap for policy vs international situation references."""
-    # Explanation: "Situation" is our operationalization of international context:
-    # events, crossings, camps, crises, war, refugees, and similar markers.
+    """Save an Altair heatmap for policy vs situation by 6-level sentiment."""
+    # Explanation: This is the compact headline view for policy vs international context.
     filtered = df.filter(pl.col("ref_type").is_in(["policy", "situation"]))
     counts = (
         filtered
-        .group_by(["ref_type", "sentiment_bucket"])
+        .group_by(["ref_type", "sentiment_level"])
         .agg(pl.len().alias("n"))
         .to_pandas()
-        .set_index(["ref_type", "sentiment_bucket"])
     )
     index = pd.MultiIndex.from_product(
-        [["policy", "situation"], SENTIMENT_ORDER],
-        names=["ref_type", "sentiment_bucket"],
+        [["policy", "situation"], SENTIMENT_LEVELS],
+        names=["ref_type", "sentiment_level"],
     )
-    heatmap_df = counts.reindex(index, fill_value=0)["n"].unstack("sentiment_bucket")
+    plot_df = counts.set_index(["ref_type", "sentiment_level"]).reindex(index, fill_value=0).reset_index()
+    plot_df["sentiment_readable"] = plot_df["sentiment_level"].map(SENTIMENT_LABELS)
 
-    plt.figure(figsize=(7, 3.5))
-    sns.heatmap(
-        heatmap_df[SENTIMENT_ORDER],
-        annot=True,
-        fmt="d",
-        cmap="Reds",
-        linewidths=0.5,
-        cbar_kws={"label": "Mentions"},
+    base = alt.Chart(plot_df).encode(
+        x=alt.X("sentiment_readable:N", title="Sentiment level", sort=SENTIMENT_READABLE_ORDER),
+        y=alt.Y("ref_type:N", title="Reference type", sort=["policy", "situation"]),
+        tooltip=[
+            alt.Tooltip("ref_type:N", title="Reference type"),
+            alt.Tooltip("sentiment_readable:N", title="Sentiment"),
+            alt.Tooltip("n:Q", title="Mentions"),
+        ],
     )
-    plt.title("Sentiment heatmap: policy vs international situation references")
-    plt.xlabel("Sentiment")
-    plt.ylabel("Reference type")
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=220)
-    plt.close()
-    return output_path
+    heatmap = base.mark_rect().encode(color=alt.Color("n:Q", title="Mentions", scale=alt.Scale(scheme="reds")))
+    labels = base.mark_text(fontSize=12).encode(text=alt.Text("n:Q"), color=alt.value("#111111"))
+    chart = (heatmap + labels).properties(
+        title="6-level sentiment heatmap: policy vs international situation references",
+        width=620,
+        height=160,
+    )
+    return _save_chart(chart, output_path)
+
+
+def plot_4x6_heatmap(matrix: pl.DataFrame, output_path: Path) -> Path:
+    """Save the headline Altair heatmap: reference type x 6-level sentiment."""
+    # Explanation: The matrix is 4 reference types by 6 sentiment levels when all appear.
+    pdf = matrix.to_pandas()
+    plot_df = pdf.melt(id_vars="ref_type", var_name="sentiment_level", value_name="n")
+    plot_df["sentiment_readable"] = plot_df["sentiment_level"].map(SENTIMENT_LABELS)
+
+    base = alt.Chart(plot_df).encode(
+        x=alt.X("sentiment_readable:N", title="Sentiment level", sort=SENTIMENT_READABLE_ORDER),
+        y=alt.Y("ref_type:N", title="Reference type", sort=REF_TYPE_ORDER),
+        tooltip=[
+            alt.Tooltip("ref_type:N", title="Reference type"),
+            alt.Tooltip("sentiment_readable:N", title="Sentiment"),
+            alt.Tooltip("n:Q", title="Mentions"),
+        ],
+    )
+    heatmap = base.mark_rect().encode(color=alt.Color("n:Q", title="Mentions", scale=alt.Scale(scheme="blues")))
+    labels = base.mark_text(fontSize=12).encode(text=alt.Text("n:Q"), color=alt.value("#111111"))
+    chart = (heatmap + labels).properties(
+        title="Reference type x 6-level sentiment",
+        width=620,
+        height=240,
+    )
+    return _save_chart(chart, output_path)
 
 
 def plot_reference_heatmap(
@@ -501,30 +631,30 @@ def plot_reference_heatmap(
     output_path: Path,
     top_n: int = 15,
 ) -> Path:
-    """Plot a heatmap of mentioned entities by reference type."""
-    # Explanation: The heatmap makes each country's dominant mode of mention visible at a glance.
+    """Save an Altair heatmap of mentioned entities by reference type."""
+    # Explanation: The heatmap makes each entity's dominant mode of mention visible quickly.
     entities = top_entities(df, top_n=top_n)
-    labels = entity_display_labels(df, entities)
-    table = _complete_count_table(df, "ref_type", REF_TYPE_ORDER, entities)
-    heatmap_df = table.set_index("entity_content").loc[entities, REF_TYPE_ORDER]
-    heatmap_df.index = [labels[entity] for entity in heatmap_df.index]
+    plot_df = _complete_count_long(df, "ref_type", REF_TYPE_ORDER, entities)
+    plot_df = _add_display_columns(plot_df, df, entities)
+    display_order = [entity_display_labels(df, entities)[entity] for entity in entities]
 
-    plt.figure(figsize=(9, 7))
-    sns.heatmap(
-        heatmap_df,
-        annot=True,
-        fmt="d",
-        cmap="YlGnBu",
-        linewidths=0.5,
-        cbar_kws={"label": "Mentions"},
+    base = alt.Chart(plot_df).encode(
+        x=alt.X("ref_type:N", title="Reference type", sort=REF_TYPE_ORDER),
+        y=alt.Y("display_entity:N", title="Mentioned entity", sort=display_order),
+        tooltip=[
+            alt.Tooltip("display_entity:N", title="Entity"),
+            alt.Tooltip("ref_type:N", title="Reference type"),
+            alt.Tooltip("n:Q", title="Mentions"),
+        ],
     )
-    plt.title("Reference-type intensity by mentioned entity")
-    plt.xlabel("Reference type")
-    plt.ylabel("Mentioned entity")
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=200)
-    plt.close()
-    return output_path
+    heatmap = base.mark_rect().encode(color=alt.Color("n:Q", title="Mentions", scale=alt.Scale(scheme="yellowgreenblue")))
+    labels = base.mark_text(fontSize=11).encode(text=alt.Text("n:Q"), color=alt.value("#111111"))
+    chart = (heatmap + labels).properties(
+        title="Reference-type intensity by mentioned entity",
+        width=520,
+        height=max(260, 25 * len(entities)),
+    )
+    return _save_chart(chart, output_path)
 
 
 def save_all_figures(
@@ -533,10 +663,10 @@ def save_all_figures(
     top_n: int = 10,
     min_mentions_for_all: int = 26,
 ) -> dict[str, Path]:
-    """Create every pilot visualization and return the saved file paths."""
+    """Create every pilot Altair visualization and return the saved file paths."""
     # Explanation: One function lets notebook users regenerate all figures consistently.
     figures_dir = ensure_figures_dir(processed_dir)
-    return {
+    output_paths = {
         "entity_distribution_top10": plot_entity_distribution(
             df,
             figures_dir / "entity_distribution_top10.png",
@@ -557,7 +687,11 @@ def save_all_figures(
             df,
             processed_dir / "entity_distribution_all_for_audit.csv",
         ),
-        "country_sentiment": plot_country_sentiment_mentions(
+        "reference_type_sentiment_heatmap": plot_4x6_heatmap(
+            build_matrix(df),
+            figures_dir / "reference_type_sentiment_heatmap.png",
+        ),
+        "country_sentiment_top10": plot_country_sentiment_mentions(
             df,
             figures_dir / "country_sentiment_mentions_top10.png",
             top_n=top_n,
@@ -572,12 +706,12 @@ def save_all_figures(
             figures_dir / "entity_distribution_heatmap_min26.png",
             min_mentions=min_mentions_for_all,
         ),
-        "country_reference_type": plot_country_reference_mentions(
+        "country_reference_type_top10": plot_country_reference_mentions(
             df,
             figures_dir / "country_reference_type_mentions_top10.png",
             top_n=top_n,
         ),
-        "policy_vs_situation_sentiment": plot_policy_situation_sentiment(
+        "policy_vs_situation_sentiment_top10": plot_policy_situation_sentiment(
             df,
             figures_dir / "policy_vs_situation_sentiment_top10.png",
             top_n=top_n,
@@ -594,9 +728,10 @@ def save_all_figures(
             df,
             figures_dir / "region_group_sentiment.png",
         ),
-        "reference_heatmap": plot_reference_heatmap(
+        "reference_heatmap_top10": plot_reference_heatmap(
             df,
             figures_dir / "country_reference_heatmap_top10.png",
             top_n=top_n,
         ),
     }
+    return output_paths

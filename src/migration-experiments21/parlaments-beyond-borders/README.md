@@ -15,14 +15,17 @@ internationally-comparative migration discussion.
 Each foreign-country mention is classified along two axes:
 
 - **Reference type**: policy / situation / mixed / neutral
-- **Sentiment**: positive / negative / neutral
+- **Sentiment**: ParlaMint's full 6-level categorical sentiment scale
 
-Sentiment buckets are based on ParlaMint's categorical
-`sentence_sentiment_ana` labels:
+Sentiment is based directly on ParlaMint's categorical
+`sentence_sentiment_ana` labels, preserving intensity:
 
-- **negative**: `senti:negneg`, `senti:mixneg`
-- **neutral**: `senti:neuneg`, `senti:neupos`
-- **positive**: `senti:mixpos`, `senti:pospos`
+- `senti:negneg` - strongly negative
+- `senti:mixneg` - mixed leaning negative
+- `senti:neuneg` - neutral with slight negative tilt
+- `senti:neupos` - neutral with slight positive tilt
+- `senti:mixpos` - mixed leaning positive
+- `senti:pospos` - strongly positive
 
 The numeric `sentence_sentiment_value` is kept in the output for inspection,
 but it is not centered at zero in this file, so it should not be interpreted
@@ -59,18 +62,28 @@ The notebook saves the annotated mention table here:
 
 - `data/processed/FRA_2018_migration_mentions.parquet`
 
-It also saves four visualization files here:
+It also saves audit CSVs here:
 
 - `data/processed/entity_distribution_min26.csv` - displayed distribution of every entity mentioned more than 25 times
 - `data/processed/entity_distribution_all_for_audit.csv` - full audit distribution of every retained mentioned entity
-- `data/processed/figures/entity_distribution_top10.png` - distribution chart for the 10 most mentioned countries/cases
-- `data/processed/figures/entity_distribution_min26.png` - all entities mentioned more than 25 times; entities with 25 or fewer mentions are not shown
-- `data/processed/figures/country_sentiment_mentions_top10.png` - top 10 entities colored by positive / negative / neutral sentiment
-- `data/processed/figures/entity_sentiment_heatmap_min26.png` - sentiment heatmap for every entity mentioned more than 25 times
-- `data/processed/figures/entity_distribution_heatmap_min26.png` - mention-volume heatmap for every entity mentioned more than 25 times
-- `data/processed/figures/country_reference_type_mentions_top10.png` - top 10 entities split by policy / situation / mixed / neutral reference type
-- `data/processed/figures/policy_vs_situation_sentiment_top10.png` - top 10 sentiment-colored comparison of policy references versus international situation/context references
-- `data/processed/figures/policy_situation_sentiment_heatmap.png` - heatmap of positive / negative / neutral sentiment for policy vs situation references
-- `data/processed/figures/region_group_distribution.png` - mentions split into European countries, non-European countries/cases, EU, and French overseas territories
-- `data/processed/figures/region_group_sentiment.png` - sentiment split by the same Europe / non-Europe / EU grouping
-- `data/processed/figures/country_reference_heatmap_top10.png` - top 10 heatmap of reference-type intensity by mentioned entity
+
+Vega-Altair visualizations are saved here:
+
+- `data/processed/figures_altair/*.html` - interactive browser versions
+- `data/processed/figures_altair/*.png` - static image exports for slides
+- `data/processed/figures_altair/*.vl.json` - Vega-Lite chart specifications
+
+The main saved charts are:
+
+- `entity_distribution_top10` - 10 most mentioned countries/cases
+- `entity_distribution_min26` - every entity mentioned more than 25 times
+- `reference_type_sentiment_heatmap` - headline reference type x 6-level sentiment matrix
+- `country_sentiment_mentions_top10` - top 10 entities split by 6-level sentiment
+- `entity_sentiment_heatmap_min26` - 6-level sentiment heatmap for every entity with more than 25 mentions
+- `entity_distribution_heatmap_min26` - mention-volume heatmap for every entity with more than 25 mentions
+- `country_reference_type_mentions_top10` - top 10 entities split by policy / situation / mixed / neutral reference type
+- `policy_vs_situation_sentiment_top10` - top 10 comparison of policy references versus international situation/context references
+- `policy_situation_sentiment_heatmap` - 6-level sentiment heatmap for policy vs situation references
+- `region_group_distribution` - mentions split into European countries, non-European countries/cases, EU, and French overseas territories
+- `region_group_sentiment` - 6-level sentiment split by the same Europe / non-Europe / EU grouping
+- `country_reference_heatmap_top10` - top 10 heatmap of reference-type intensity by mentioned entity

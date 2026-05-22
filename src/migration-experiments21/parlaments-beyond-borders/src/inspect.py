@@ -73,7 +73,9 @@ def show_sample_contexts(
             "session_date",
             "entity_content",
             "ref_type",
-            "sentiment_bucket",
+            # Explanation: sentiment_level keeps the full ParlaMint 6-level scale.
+            "sentiment_level",
+            "sentiment_readable",
             "sentence_sentiment_value",
             "context_window",
         ])
