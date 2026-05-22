@@ -917,4 +917,212 @@ def save_extended_figures(
             edges,
             figures_dir / "cohort_policy_heatmap.png",
         ),
+        "country_concreteness_bubble": plot_country_concreteness_bubble(
+            df,
+            figures_dir / "country_concreteness_bubble.png",
+        ),
+        "country_year_concreteness_heatmap": plot_country_year_concreteness_heatmap(
+            df,
+            figures_dir / "country_year_concreteness_heatmap.png",
+        ),
+        "country_cohort_heatmap": plot_country_cohort_heatmap(
+            edges,
+            figures_dir / "country_cohort_heatmap.png",
+        ),
+        "country_policy_heatmap": plot_country_policy_heatmap(
+            edges,
+            figures_dir / "country_policy_heatmap.png",
+        ),
     }
+
+
+def _top_targets_from_edges(edges: pl.DataFrame, top_n: int = 25) -> list[str]:
+    """Return top target entities from a diffusion edge table."""
+    # Explanation: Shared helper keeps country heatmaps focused and comparable.
+    return (
+        edges
+        .group_by("target_entity")
+        .agg(pl.col("weight").sum().alias("total_mentions"))
+        .sort("total_mentions", descending=True)
+        .head(top_n)
+        .get_column("target_entity")
+        .to_list()
+    )
+
+
+def plot_country_concreteness_bubble(
+    df: pl.DataFrame,
+    output_path: Path,
+    min_mentions: int = 10,
+) -> Path:
+    """Save an interactive country bubble chart for concreteness and volume."""
+    # Explanation: This chart puts "which countries are mentioned how" at the center.
+    plot_df = (
+        df
+        .drop_nulls("concreteness_score")
+        .group_by(["entity_content", "target_iso3", "weog_group", "region_group", "geo_class"])
+        .agg([
+            pl.len().alias("n_mentions"),
+            pl.col("concreteness_score").mean().round(3).alias("mean_concreteness"),
+            pl.col("ref_type").mode().first().alias("dominant_ref_type"),
+            pl.col("migrant_cohort").mode().first().alias("dominant_cohort"),
+            pl.col("policy_measure").mode().first().alias("dominant_policy_measure"),
+            pl.col("sentiment_readable").mode().first().alias("dominant_sentiment"),
+        ])
+        .filter(pl.col("n_mentions") >= min_mentions)
+        .sort("n_mentions", descending=True)
+        .to_pandas()
+    )
+    plot_df["weog_group_readable"] = plot_df["weog_group"].map(WEOG_GROUP_LABELS).fillna(plot_df["weog_group"])
+
+    selector = alt.selection_point(fields=["weog_group_readable"], bind="legend")
+    chart = (
+        alt.Chart(plot_df)
+        .mark_circle(stroke="#333333", strokeWidth=0.5)
+        .encode(
+            x=alt.X("mean_concreteness:Q", title="Mean concreteness (1 abstract - 5 concrete)", scale=alt.Scale(zero=False)),
+            y=alt.Y("n_mentions:Q", title="Number of mentions", scale=alt.Scale(type="sqrt")),
+            size=alt.Size("n_mentions:Q", title="Mentions", scale=alt.Scale(range=[80, 1600])),
+            color=alt.Color("weog_group_readable:N", title="Country/entity group"),
+            opacity=alt.condition(selector, alt.value(0.9), alt.value(0.18)),
+            tooltip=[
+                alt.Tooltip("entity_content:N", title="Mentioned country/entity"),
+                alt.Tooltip("target_iso3:N", title="ISO3"),
+                alt.Tooltip("weog_group_readable:N", title="Group"),
+                alt.Tooltip("n_mentions:Q", title="Mentions"),
+                alt.Tooltip("mean_concreteness:Q", title="Mean concreteness"),
+                alt.Tooltip("dominant_ref_type:N", title="Dominant reference"),
+                alt.Tooltip("dominant_cohort:N", title="Dominant cohort"),
+                alt.Tooltip("dominant_policy_measure:N", title="Dominant policy"),
+                alt.Tooltip("dominant_sentiment:N", title="Dominant sentiment"),
+            ],
+        )
+        .add_params(selector)
+        .interactive()
+        .properties(
+            title="How other countries/entities are mentioned: volume x concreteness",
+            width=820,
+            height=460,
+        )
+    )
+    return _save_chart(chart, output_path)
+
+
+def plot_country_year_concreteness_heatmap(
+    df: pl.DataFrame,
+    output_path: Path,
+    top_n: int = 25,
+) -> Path:
+    """Save an interactive country x year heatmap of mean concreteness."""
+    # Explanation: This shows whether country references become more concrete/abstract over time.
+    entities = top_entities(df, top_n=top_n)
+    plot_df = (
+        df
+        .drop_nulls("concreteness_score")
+        .filter(pl.col("entity_content").is_in(entities))
+        .group_by(["entity_content", "source_year", "weog_group"])
+        .agg([
+            pl.len().alias("n_mentions"),
+            pl.col("concreteness_score").mean().round(3).alias("mean_concreteness"),
+            pl.col("ref_type").mode().first().alias("dominant_ref_type"),
+        ])
+        .sort(["entity_content", "source_year"])
+        .to_pandas()
+    )
+    entity_order = entities
+    base = alt.Chart(plot_df).encode(
+        x=alt.X("source_year:O", title="Year"),
+        y=alt.Y("entity_content:N", title="Mentioned country/entity", sort=entity_order),
+        tooltip=[
+            alt.Tooltip("entity_content:N", title="Entity"),
+            alt.Tooltip("source_year:O", title="Year"),
+            alt.Tooltip("n_mentions:Q", title="Mentions"),
+            alt.Tooltip("mean_concreteness:Q", title="Mean concreteness"),
+            alt.Tooltip("dominant_ref_type:N", title="Dominant reference"),
+        ],
+    )
+    heatmap = base.mark_rect().encode(
+        color=alt.Color(
+            "mean_concreteness:Q",
+            title="Mean concreteness",
+            scale=alt.Scale(scheme="viridis", domain=[2.8, 3.6]),
+        )
+    )
+    labels = base.mark_text(fontSize=9).encode(
+        text=alt.Text("mean_concreteness:Q", format=".2f"),
+        color=alt.value("#111111"),
+    )
+    chart = (heatmap + labels).interactive().properties(
+        title="Country/entity x year concreteness heatmap",
+        width=640,
+        height=max(360, 22 * len(entities)),
+    )
+    return _save_chart(chart, output_path)
+
+
+def plot_country_cohort_heatmap(
+    edges: pl.DataFrame,
+    output_path: Path,
+    top_n: int = 25,
+) -> Path:
+    """Save target country/entity x migrant cohort heatmap."""
+    # Explanation: This answers which countries are invoked for which migrant groups.
+    targets = _top_targets_from_edges(edges, top_n=top_n)
+    plot_df = (
+        edges
+        .filter(pl.col("target_entity").is_in(targets))
+        .group_by(["target_entity", "migrant_cohort"])
+        .agg(pl.col("weight").sum().alias("weight"))
+        .to_pandas()
+    )
+    base = alt.Chart(plot_df).encode(
+        x=alt.X("migrant_cohort:N", title="Migrant cohort"),
+        y=alt.Y("target_entity:N", title="Mentioned country/entity", sort=targets),
+        tooltip=[
+            alt.Tooltip("target_entity:N", title="Target"),
+            alt.Tooltip("migrant_cohort:N", title="Cohort"),
+            alt.Tooltip("weight:Q", title="Mentions"),
+        ],
+    )
+    heatmap = base.mark_rect().encode(color=alt.Color("weight:Q", title="Mentions", scale=alt.Scale(scheme="blues")))
+    labels = base.mark_text(fontSize=9).encode(text=alt.Text("weight:Q"), color=alt.value("#111111"))
+    chart = (heatmap + labels).interactive().properties(
+        title="Which countries/entities are mentioned for which migrant cohorts?",
+        width=700,
+        height=max(360, 22 * len(targets)),
+    )
+    return _save_chart(chart, output_path)
+
+
+def plot_country_policy_heatmap(
+    edges: pl.DataFrame,
+    output_path: Path,
+    top_n: int = 25,
+) -> Path:
+    """Save target country/entity x policy measure heatmap."""
+    # Explanation: This answers which countries are invoked for which policy instruments.
+    targets = _top_targets_from_edges(edges, top_n=top_n)
+    plot_df = (
+        edges
+        .filter(pl.col("target_entity").is_in(targets))
+        .group_by(["target_entity", "policy_measure"])
+        .agg(pl.col("weight").sum().alias("weight"))
+        .to_pandas()
+    )
+    base = alt.Chart(plot_df).encode(
+        x=alt.X("policy_measure:N", title="Policy measure"),
+        y=alt.Y("target_entity:N", title="Mentioned country/entity", sort=targets),
+        tooltip=[
+            alt.Tooltip("target_entity:N", title="Target"),
+            alt.Tooltip("policy_measure:N", title="Policy measure"),
+            alt.Tooltip("weight:Q", title="Mentions"),
+        ],
+    )
+    heatmap = base.mark_rect().encode(color=alt.Color("weight:Q", title="Mentions", scale=alt.Scale(scheme="oranges")))
+    labels = base.mark_text(fontSize=9).encode(text=alt.Text("weight:Q"), color=alt.value("#111111"))
+    chart = (heatmap + labels).interactive().properties(
+        title="Which countries/entities are mentioned for which policy measures?",
+        width=820,
+        height=max(360, 22 * len(targets)),
+    )
+    return _save_chart(chart, output_path)

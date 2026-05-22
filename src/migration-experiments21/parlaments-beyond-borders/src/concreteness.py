@@ -139,6 +139,40 @@ def sentence_concreteness_score(
     return round(sum(scores) / len(scores), 3)
 
 
+def concreteness_diagnostics(
+    text: str | None,
+    entities: list[str] | None = None,
+) -> dict[str, object]:
+    """Return transparent evidence used by the fallback concreteness scorer."""
+    # Explanation: Diagnostics make the score auditable in context tables.
+    tokens = tokenize(text)
+    entity_tokens = _entity_tokens(entities)
+    concrete_hits = sorted({token for token in tokens if token in CONCRETE_MARKERS})
+    abstract_hits = sorted({token for token in tokens if token in ABSTRACT_MARKERS})
+    entity_hits = sorted({token for token in tokens if token in entity_tokens})
+    return {
+        "token_count": len(tokens),
+        "concrete_marker_hits": ", ".join(concrete_hits),
+        "abstract_marker_hits": ", ".join(abstract_hits),
+        "entity_token_hits": ", ".join(entity_hits),
+        "concrete_marker_count": len(concrete_hits),
+        "abstract_marker_count": len(abstract_hits),
+    }
+
+
+def concreteness_band(score: float | None) -> str:
+    """Convert a numeric score into an interpretable pilot-relative band."""
+    # Explanation: With the fallback heuristic, most scores cluster near 3.2.
+    # These bands are therefore relative diagnostics, not universal thresholds.
+    if score is None:
+        return "unknown"
+    if score < 3.2:
+        return "abstract_leaning"
+    if score >= 3.3:
+        return "concrete_leaning"
+    return "mixed"
+
+
 def concreteness_method(lexicon: dict[str, float] | None = None) -> str:
     """Return the method label stored in the output table."""
     # Explanation: This makes it explicit whether results use lexicon scores or fallback.
@@ -153,7 +187,7 @@ def add_concreteness_scores(
     # Explanation: We score the context window and give the mentioned entity max
     # concreteness because named places/institutions make the sentence specific.
     method = concreteness_method(lexicon)
-    return df.with_columns([
+    scored = df.with_columns([
         pl.struct(["context_window", "entity_content"])
         .map_elements(
             lambda row: sentence_concreteness_score(
@@ -165,6 +199,38 @@ def add_concreteness_scores(
         )
         .alias("concreteness_score"),
         pl.lit(method).alias("concreteness_method"),
+    ])
+    return scored.with_columns([
+        pl.col("concreteness_score")
+        .map_elements(concreteness_band, return_dtype=pl.Utf8)
+        .alias("concreteness_band"),
+        pl.struct(["context_window", "entity_content"])
+        .map_elements(
+            lambda row: concreteness_diagnostics(
+                row["context_window"],
+                entities=[row["entity_content"]],
+            )["token_count"],
+            return_dtype=pl.Int64,
+        )
+        .alias("concreteness_token_count"),
+        pl.struct(["context_window", "entity_content"])
+        .map_elements(
+            lambda row: concreteness_diagnostics(
+                row["context_window"],
+                entities=[row["entity_content"]],
+            )["concrete_marker_hits"],
+            return_dtype=pl.Utf8,
+        )
+        .alias("concrete_marker_hits"),
+        pl.struct(["context_window", "entity_content"])
+        .map_elements(
+            lambda row: concreteness_diagnostics(
+                row["context_window"],
+                entities=[row["entity_content"]],
+            )["abstract_marker_hits"],
+            return_dtype=pl.Utf8,
+        )
+        .alias("abstract_marker_hits"),
     ])
 
 

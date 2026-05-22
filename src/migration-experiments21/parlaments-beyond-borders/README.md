@@ -64,6 +64,9 @@ jupyter notebook notebooks/02_fra_2017_2022_extended.ipynb
 
 ## Extended 2017-2022 Methods
 
+For the conceptual framing, research questions, and validation logic, see
+`METHODOLOGY.md`.
+
 The extended notebook uses all available France files:
 
 - `FRA_2017_facts.parquet`
@@ -147,6 +150,11 @@ The main saved charts are:
 The extended notebook saves:
 
 - `data/processed/FRA_2017_2022_migration_mentions_extended.parquet`
+- `data/processed/FRA_2017_2022_result_notes.md`
+- `data/processed/FRA_2017_2022_country_mention_profile.csv`
+- `data/processed/FRA_2017_2022_country_year_profile.csv`
+- `data/processed/FRA_2017_2022_country_context_examples.csv`
+- `data/processed/FRA_2017_2022_cohort_policy_context_examples.csv`
 - `data/processed/FRA_2017_2022_diffusion_edges.csv`
 - `data/processed/FRA_2017_2022_diffusion_target_summary.csv`
 - `data/processed/FRA_2017_2022_diffusion_network.graphml`
@@ -154,3 +162,7 @@ The extended notebook saves:
 - `data/processed/figures_altair_extended/concreteness_by_year_region.*`
 - `data/processed/figures_altair_extended/diffusion_top_targets.*`
 - `data/processed/figures_altair_extended/cohort_policy_heatmap.*`
+- `data/processed/figures_altair_extended/country_concreteness_bubble.*`
+- `data/processed/figures_altair_extended/country_year_concreteness_heatmap.*`
+- `data/processed/figures_altair_extended/country_cohort_heatmap.*`
+- `data/processed/figures_altair_extended/country_policy_heatmap.*`

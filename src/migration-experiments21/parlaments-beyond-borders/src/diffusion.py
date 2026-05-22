@@ -79,6 +79,18 @@ def _contains_any(text: str | None, markers: set[str]) -> bool:
     return any(marker in lower for marker in markers)
 
 
+def _first_marker(text: str | None, markers: set[str]) -> str:
+    """Return the first matched marker in a deterministic order."""
+    # Explanation: Marker evidence lets colleagues inspect why a label was assigned.
+    if not isinstance(text, str):
+        return ""
+    lower = text.lower()
+    for marker in sorted(markers, key=len, reverse=True):
+        if marker in lower:
+            return marker
+    return ""
+
+
 def classify_migrant_cohort(text: str | None) -> str:
     """Classify the migrant cohort discussed in a context window."""
     # Explanation: First matching cohort wins; order follows the research categories.
@@ -86,6 +98,15 @@ def classify_migrant_cohort(text: str | None) -> str:
         if _contains_any(text, markers):
             return cohort
     return "general_migration"
+
+
+def matched_migrant_cohort_marker(text: str | None) -> str:
+    """Return the keyword/phrase that triggered the migrant cohort label."""
+    for markers in COHORT_MARKERS.values():
+        marker = _first_marker(text, markers)
+        if marker:
+            return marker
+    return ""
 
 
 def classify_policy_measure(text: str | None) -> str:
@@ -97,6 +118,15 @@ def classify_policy_measure(text: str | None) -> str:
     return "general_policy"
 
 
+def matched_policy_measure_marker(text: str | None) -> str:
+    """Return the keyword/phrase that triggered the policy measure label."""
+    for markers in POLICY_MEASURE_MARKERS.values():
+        marker = _first_marker(text, markers)
+        if marker:
+            return marker
+    return ""
+
+
 def add_diffusion_classifications(df: pl.DataFrame) -> pl.DataFrame:
     """Add migrant cohort and policy measure labels to mentions."""
     # Explanation: These columns become edge attributes in the diffusion network.
@@ -105,8 +135,15 @@ def add_diffusion_classifications(df: pl.DataFrame) -> pl.DataFrame:
         .map_elements(classify_migrant_cohort, return_dtype=pl.Utf8)
         .alias("migrant_cohort"),
         pl.col("context_window")
+        .map_elements(matched_migrant_cohort_marker, return_dtype=pl.Utf8)
+        .alias("migrant_cohort_marker"),
+        pl.col("context_window")
         .map_elements(classify_policy_measure, return_dtype=pl.Utf8)
         .alias("policy_measure"),
+        pl.col("context_window")
+        .map_elements(matched_policy_measure_marker, return_dtype=pl.Utf8)
+        .alias("policy_measure_marker"),
+        pl.lit("keyword_rules").alias("cohort_policy_method"),
     ])
 
 
@@ -135,6 +172,8 @@ def build_diffusion_edges(df: pl.DataFrame, source_country: str = "FRA") -> pl.D
         .agg([
             pl.len().alias("weight"),
             pl.col("sentence_id").n_unique().alias("n_sentences"),
+            pl.col("migrant_cohort_marker").drop_nulls().unique().str.join(", ").alias("cohort_markers"),
+            pl.col("policy_measure_marker").drop_nulls().unique().str.join(", ").alias("policy_markers"),
         ])
         .sort(["weight", "target_entity"], descending=[True, False])
     )
