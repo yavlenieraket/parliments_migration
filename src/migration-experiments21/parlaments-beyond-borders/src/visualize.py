@@ -47,6 +47,14 @@ REGION_GROUP_LABELS = {
     "french_overseas": "French overseas territory",
 }
 
+WEOG_GROUP_LABELS = {
+    "weog": "WEOG / Western & others",
+    "non_weog": "Non-WEOG",
+    "european_union": "European Union",
+    "french_overseas": "French overseas territory",
+    "unknown": "Unknown",
+}
+
 # Explanation: Fixed category orders make comparisons stable across notebook reruns.
 SENTIMENT_READABLE_ORDER = [SENTIMENT_LABELS[level] for level in SENTIMENT_LEVELS]
 REF_TYPE_ORDER = ["policy", "situation", "mixed", "neutral_reference", "unknown"]
@@ -735,3 +743,178 @@ def save_all_figures(
         ),
     }
     return output_paths
+
+
+def plot_concreteness_density_by_weog(
+    df: pl.DataFrame,
+    output_path: Path,
+) -> Path:
+    """Save a density plot of concreteness score by WEOG/non-WEOG group."""
+    # Explanation: This directly visualizes the abstraction/concreteness hypothesis.
+    plot_df = (
+        df
+        .drop_nulls("concreteness_score")
+        .filter(pl.col("weog_group").is_in(["weog", "non_weog"]))
+        .select(["concreteness_score", "weog_group"])
+        .to_pandas()
+    )
+    plot_df["weog_group_readable"] = plot_df["weog_group"].map(WEOG_GROUP_LABELS)
+
+    chart = (
+        alt.Chart(plot_df)
+        .transform_density(
+            "concreteness_score",
+            as_=["concreteness_score", "density"],
+            groupby=["weog_group_readable"],
+            extent=[1, 5],
+        )
+        .mark_area(opacity=0.45)
+        .encode(
+            x=alt.X("concreteness_score:Q", title="Concreteness score (1 abstract - 5 concrete)"),
+            y=alt.Y("density:Q", title="Density"),
+            color=alt.Color("weog_group_readable:N", title="Mentioned-country group"),
+            tooltip=[
+                alt.Tooltip("weog_group_readable:N", title="Group"),
+                alt.Tooltip("concreteness_score:Q", title="Concreteness", format=".2f"),
+                alt.Tooltip("density:Q", title="Density", format=".3f"),
+            ],
+        )
+        .properties(title="Concreteness distribution: WEOG vs non-WEOG mentions", width=760, height=360)
+    )
+    return _save_chart(chart, output_path)
+
+
+def plot_concreteness_by_year_region(
+    df: pl.DataFrame,
+    output_path: Path,
+) -> Path:
+    """Save yearly mean concreteness by WEOG/non-WEOG group."""
+    # Explanation: The line chart checks whether regional differences are stable over time.
+    plot_df = (
+        df
+        .drop_nulls("concreteness_score")
+        .filter(pl.col("weog_group").is_in(["weog", "non_weog"]))
+        .group_by(["source_year", "weog_group"])
+        .agg([
+            pl.len().alias("n_mentions"),
+            pl.col("concreteness_score").mean().round(3).alias("mean_concreteness"),
+        ])
+        .sort(["source_year", "weog_group"])
+        .to_pandas()
+    )
+    plot_df["weog_group_readable"] = plot_df["weog_group"].map(WEOG_GROUP_LABELS)
+
+    chart = (
+        alt.Chart(plot_df)
+        .mark_line(point=True)
+        .encode(
+            x=alt.X("source_year:O", title="Year"),
+            y=alt.Y("mean_concreteness:Q", title="Mean concreteness", scale=alt.Scale(zero=False)),
+            color=alt.Color("weog_group_readable:N", title="Mentioned-country group"),
+            tooltip=[
+                alt.Tooltip("source_year:O", title="Year"),
+                alt.Tooltip("weog_group_readable:N", title="Group"),
+                alt.Tooltip("mean_concreteness:Q", title="Mean concreteness"),
+                alt.Tooltip("n_mentions:Q", title="Mentions"),
+            ],
+        )
+        .properties(title="Mean concreteness by mentioned-country group and year", width=760, height=360)
+    )
+    return _save_chart(chart, output_path)
+
+
+def plot_diffusion_top_targets(
+    edges: pl.DataFrame,
+    output_path: Path,
+    top_n: int = 20,
+) -> Path:
+    """Save top target entities in the policy-diffusion network."""
+    # Explanation: Edge weights count how often France references a target entity.
+    plot_df = (
+        edges
+        .group_by(["target_entity", "region_group", "weog_group"])
+        .agg(pl.col("weight").sum().alias("total_mentions"))
+        .sort("total_mentions", descending=True)
+        .head(top_n)
+        .to_pandas()
+    )
+    plot_df["region_group_readable"] = plot_df["region_group"].map(REGION_GROUP_LABELS).fillna(plot_df["weog_group"])
+    target_order = plot_df["target_entity"].tolist()
+
+    chart = (
+        alt.Chart(plot_df)
+        .mark_bar()
+        .encode(
+            x=alt.X("total_mentions:Q", title="Weighted mentions"),
+            y=alt.Y("target_entity:N", title="Target entity", sort=target_order),
+            color=alt.Color("region_group_readable:N", title="Analytical group"),
+            tooltip=[
+                alt.Tooltip("target_entity:N", title="Target"),
+                alt.Tooltip("region_group_readable:N", title="Group"),
+                alt.Tooltip("total_mentions:Q", title="Mentions"),
+            ],
+        )
+        .properties(title="Top targets in France policy-diffusion network", width=760, height=max(320, 22 * len(plot_df)))
+    )
+    return _save_chart(chart, output_path)
+
+
+def plot_cohort_policy_heatmap(
+    edges: pl.DataFrame,
+    output_path: Path,
+) -> Path:
+    """Save a heatmap of migrant cohort x policy measure edge weights."""
+    # Explanation: This shows which migrant groups are linked to which policy instruments.
+    plot_df = (
+        edges
+        .group_by(["migrant_cohort", "policy_measure"])
+        .agg(pl.col("weight").sum().alias("weight"))
+        .to_pandas()
+    )
+
+    base = alt.Chart(plot_df).encode(
+        x=alt.X("policy_measure:N", title="Policy measure"),
+        y=alt.Y("migrant_cohort:N", title="Migrant cohort"),
+        tooltip=[
+            alt.Tooltip("migrant_cohort:N", title="Cohort"),
+            alt.Tooltip("policy_measure:N", title="Policy measure"),
+            alt.Tooltip("weight:Q", title="Weighted mentions"),
+        ],
+    )
+    heatmap = base.mark_rect().encode(color=alt.Color("weight:Q", title="Weighted mentions", scale=alt.Scale(scheme="blues")))
+    labels = base.mark_text(fontSize=10).encode(text=alt.Text("weight:Q"), color=alt.value("#111111"))
+    chart = (heatmap + labels).properties(
+        title="Migrant cohort x policy measure in diffusion references",
+        width=760,
+        height=300,
+    )
+    return _save_chart(chart, output_path)
+
+
+def save_extended_figures(
+    df: pl.DataFrame,
+    edges: pl.DataFrame,
+    processed_dir: Path,
+) -> dict[str, Path]:
+    """Save Altair figures for the 2017-2022 extended hypotheses."""
+    # Explanation: These figures are separate from the original 2018 pilot charts.
+    figures_dir = processed_dir / "figures_altair_extended"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    return {
+        "concreteness_density_by_weog": plot_concreteness_density_by_weog(
+            df,
+            figures_dir / "concreteness_density_by_weog.png",
+        ),
+        "concreteness_by_year_region": plot_concreteness_by_year_region(
+            df,
+            figures_dir / "concreteness_by_year_region.png",
+        ),
+        "diffusion_top_targets": plot_diffusion_top_targets(
+            edges,
+            figures_dir / "diffusion_top_targets.png",
+        ),
+        "cohort_policy_heatmap": plot_cohort_policy_heatmap(
+            edges,
+            figures_dir / "cohort_policy_heatmap.png",
+        ),
+    }

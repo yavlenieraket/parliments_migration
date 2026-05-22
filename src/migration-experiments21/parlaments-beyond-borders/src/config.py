@@ -10,6 +10,7 @@ PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
 SOURCE_COUNTRY = "FRA"
 SOURCE_YEAR = 2018
+SOURCE_YEARS = list(range(2017, 2023))
 
 FACTS_FILE = DATA_ROOT / "Table1_Fact" / SOURCE_COUNTRY / f"{SOURCE_COUNTRY}_{SOURCE_YEAR}_facts.parquet"
 MASTER_PEOPLE = DATA_ROOT / "Table2_People" / "Master_People.parquet"
@@ -18,6 +19,17 @@ MASTER_AFFILIATIONS = DATA_ROOT / "Table4_Affiliations" / "Master_Affiliations.p
 
 # The actual ParlaMint-en.ana CAP topic code in the parquet is "immig".
 MIGRATION_TOPIC = "immig"
+
+# Explanation: Keyword fallback for rows that mention migration vocabulary even when
+# the debate_topic tag is missing or too broad. The terms are English because this
+# project uses ParlaMint-en.ana.
+MIGRATION_KEYWORDS = {
+    "refugee", "refugees",
+    "migrant", "migrants",
+    "immigrant", "immigrants",
+    "asylum", "asylum seeker", "asylum seekers",
+    "migration", "immigration",
+}
 
 # === Exclusion lists in English (ParlaMint-en.ana) ===
 
@@ -42,6 +54,14 @@ FRENCH_CITIES_REGIONS = {
     "Alpes", "Pas", "Matignon", "Sangatte", "Calaisis",
     "Ouistreham", "Maritimes", "Seine", "Haute", "Savoie",
     "Hauts", "Grande", "Marseilles", "Synthe", "Metz", "Roissy",
+    "Aubervilliers", "La Chapelle", "Bouches", "Moselle", "Nord",
+    "Hérault", "Isère", "Pyrénées", "Béziers", "Sarthe", "Dieppe",
+    "Roubaix", "Col de l'Échelle", "Essonne", "Mesnil", "Conflans",
+    "Ain", "Loire", "Yvelines", "Calvados", "Bobigny", "Garonne",
+    "Croisilles", "La Celle", "Perthus", "Palaiseau", "Amiens",
+    "Cherbourg", "Chapelle", "Meurthe", "Puy", "Denain", "Franche",
+    "Annemasse", "Sète", "Nanterre", "Orléans", "Dunkirk", "Marne",
+    "Rhône", "Val", "Hautes",
 }
 
 # Geographic terms that are not countries.
@@ -58,6 +78,18 @@ GEO_NON_COUNTRY = {
     "sub-Saharan Africa", "the Mediterranean", "Mediterranean Sea",
     "the Channel", "Channel", "North Sea", "South",
     "Dublin", "Brussels", "Sandhurst", "Aquarius", "Travellers",
+    "English Channel", "Balkan", "Pacific", "West Africa", "Member State",
+    "European States", "Sorbonne", "The Republic", "Levant",
+    "Roya Valley", "Central Mediterranean", "Idlib", "No Border",
+    "Fifth Republic", "Indian Ocean", "Near East", "Médecins",
+    "Chapel", "Chapel Gate", "La République", "Islamic State",
+    "Territory", "African States", "Saharan", "Place de la République",
+    "Darfur", "Caribbean", "West Indies", "Ile", "Samos",
+    "Nagorny Karabakh", "Lampedusa", "Daesh", "Overseas Territories",
+    "Chechnya", "Tindouf", "Sahara", "-Saharan Africa", "New York",
+    "London", "Berlin", "Abidjan", "Kabul", "Marrakech", "Agadez",
+    "Niamey", "Ankara", "Dakar", "North", "Saint", "Sainte", "Terre",
+    "Côte",
 }
 
 # French overseas territories - politically French but discussed as
@@ -69,6 +101,7 @@ FRENCH_OVERSEAS = {
     "Martinique", "Guadeloupe",
     "New Caledonia", "Nouvelle-Calédonie",
     "French Polynesia", "Polynesia",
+    "Wallis and Futuna",
 }
 
 EU_ENTITIES = {

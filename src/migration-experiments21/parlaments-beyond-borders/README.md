@@ -56,6 +56,62 @@ pip install -r requirements.txt
 jupyter notebook notebooks/01_fra_2018_pilot.ipynb
 ```
 
+For the extended 2017-2022 analysis, run:
+
+```bash
+jupyter notebook notebooks/02_fra_2017_2022_extended.ipynb
+```
+
+## Extended 2017-2022 Methods
+
+The extended notebook uses all available France files:
+
+- `FRA_2017_facts.parquet`
+- `FRA_2018_facts.parquet`
+- `FRA_2019_facts.parquet`
+- `FRA_2020_facts.parquet`
+- `FRA_2021_facts.parquet`
+- `FRA_2022_facts.parquet`
+
+It adds two analysis layers.
+
+### Concreteness / Abstractness
+
+The notebook scores each migration context window on a 1-5 concreteness scale.
+Named entities are treated as maximally concrete because they point to specific
+places or institutions. The code can use a Brysbaert-style concreteness lexicon
+if supplied; otherwise it uses a transparent fallback heuristic and records this
+in `concreteness_method`.
+
+The regional comparison uses `weog_group`:
+
+- `weog`
+- `non_weog`
+- `european_union`
+- `french_overseas`
+- `unknown`
+
+The WEOG/non-WEOG density chart excludes `unknown`, `european_union`, and
+`french_overseas` so the regional hypothesis is tested only on country mentions.
+
+### Cohorts / Policy Diffusion
+
+The notebook classifies each context into migrant cohorts and policy measures
+with transparent keyword rules:
+
+- migrant cohorts: refugees, asylum seekers, students, economic migrants,
+  high-skilled workers, general migration
+- policy measures: international law, national security, border control,
+  allocation of resources, integration, returns/deportation, asylum procedure,
+  visas/mobility, general policy
+
+It then builds a weighted directed network:
+
+- source node: `FRA`
+- target node: mentioned country/entity
+- edge weight: number of mentions
+- edge attributes: year, migrant cohort, policy measure, reference type
+
 ## Outputs
 
 The notebook saves the annotated mention table here:
@@ -87,3 +143,14 @@ The main saved charts are:
 - `region_group_distribution` - mentions split into European countries, non-European countries/cases, EU, and French overseas territories
 - `region_group_sentiment` - 6-level sentiment split by the same Europe / non-Europe / EU grouping
 - `country_reference_heatmap_top10` - top 10 heatmap of reference-type intensity by mentioned entity
+
+The extended notebook saves:
+
+- `data/processed/FRA_2017_2022_migration_mentions_extended.parquet`
+- `data/processed/FRA_2017_2022_diffusion_edges.csv`
+- `data/processed/FRA_2017_2022_diffusion_target_summary.csv`
+- `data/processed/FRA_2017_2022_diffusion_network.graphml`
+- `data/processed/figures_altair_extended/concreteness_density_by_weog.*`
+- `data/processed/figures_altair_extended/concreteness_by_year_region.*`
+- `data/processed/figures_altair_extended/diffusion_top_targets.*`
+- `data/processed/figures_altair_extended/cohort_policy_heatmap.*`

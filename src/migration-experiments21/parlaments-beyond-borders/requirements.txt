@@ -3,4 +3,5 @@ pyarrow>=14.0
 pandas>=2.0
 altair>=6.0
 vl-convert-python>=1.9
+networkx>=3.2
 jupyter>=1.0

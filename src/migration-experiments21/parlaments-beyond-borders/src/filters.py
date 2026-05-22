@@ -1,5 +1,7 @@
 """Filtering functions for migration discourse and foreign country mentions."""
 
+import re
+
 import polars as pl
 
 from src.config import (
@@ -7,6 +9,7 @@ from src.config import (
     EUROPEAN_COUNTRIES,
     EXCLUDE_FROM_FOREIGN,
     FRENCH_OVERSEAS,
+    MIGRATION_KEYWORDS,
     MIGRATION_TOPIC,
 )
 
@@ -56,15 +59,53 @@ COUNTRY_ALIASES = {
     "Mahorais": "Mayotte",
     "Anjouan": "Comoros",
     "EU": "European Union",
+    "US": "United States",
+    "Republic of Armenia": "Armenia",
+    "Côte d'Ivoire": "Cote d'Ivoire",
+    "Ivory Coast": "Cote d'Ivoire",
+    "Futuna": "Wallis and Futuna",
+    "Mamoudzou": "Mayotte",
 }
 
 EU_ENTITY_ALIASES = {"European Union", "EU"}
 
 
-def filter_migration(lf: pl.LazyFrame) -> pl.LazyFrame:
-    """Keep only rows from speeches tagged as immigration (CAP topic 9)."""
-    # Explanation: The parquet stores the immigration CAP topic as the code "immig".
-    return lf.filter(pl.col("debate_topic") == MIGRATION_TOPIC)
+def _migration_keyword_pattern() -> str:
+    """Return a regex matching migration keywords as whole words/phrases."""
+    # Explanation: Longer phrases are sorted first so "asylum seeker" is checked
+    # before the shorter "asylum" token.
+    terms = sorted(MIGRATION_KEYWORDS, key=len, reverse=True)
+    escaped = [re.escape(term.lower()) for term in terms]
+    return r"\b(" + "|".join(escaped) + r")\b"
+
+
+def filter_migration(
+    lf: pl.LazyFrame,
+    use_topic: bool = True,
+    use_keywords: bool = False,
+) -> pl.LazyFrame:
+    """Keep rows tagged as immigration and/or containing migration keywords."""
+    # Explanation: CAP topic is the strongest signal; keywords catch migration rows
+    # where the topic label is missing, noisy, or broader than the sentence.
+    predicates = []
+    if use_topic:
+        predicates.append(pl.col("debate_topic") == MIGRATION_TOPIC)
+    if use_keywords:
+        text = pl.concat_str([
+            pl.col("sentence_content_previous").fill_null(""),
+            pl.lit(" "),
+            pl.col("sentence_content_current").fill_null(""),
+            pl.lit(" "),
+            pl.col("sentence_content_next").fill_null(""),
+        ]).str.to_lowercase()
+        predicates.append(text.str.contains(_migration_keyword_pattern()))
+    if not predicates:
+        return lf
+
+    predicate = predicates[0]
+    for extra_predicate in predicates[1:]:
+        predicate = predicate | extra_predicate
+    return lf.filter(predicate)
 
 
 def filter_country_mentions(lf: pl.LazyFrame) -> pl.LazyFrame:
@@ -147,7 +188,11 @@ def build_context_window(lf: pl.LazyFrame) -> pl.LazyFrame:
     )
 
 
-def build_migration_mentions(lf: pl.LazyFrame) -> pl.DataFrame:
+def build_migration_mentions(
+    lf: pl.LazyFrame,
+    use_topic: bool = True,
+    use_keywords: bool = False,
+) -> pl.DataFrame:
     """Full pipeline: facts -> migration debates -> LOC entities ->
     foreign countries (with overseas flag) -> with context window.
 
@@ -156,14 +201,20 @@ def build_migration_mentions(lf: pl.LazyFrame) -> pl.DataFrame:
     # Explanation: The order matters: normalize names before excluding domestic terms.
     return (
         lf
-        .pipe(filter_migration)
+        .pipe(filter_migration, use_topic=use_topic, use_keywords=use_keywords)
         .pipe(filter_country_mentions)
         .pipe(normalize_country_names)
         .pipe(filter_foreign)
         .pipe(add_geo_class)
         .pipe(add_region_group)
         .pipe(build_context_window)
+        .with_columns(
+            # Explanation: Keep source_year in every output, even if the input was
+            # loaded from a single file without the multi-year loader.
+            pl.col("session_date").dt.year().alias("source_year")
+        )
         .select([
+            "source_year",
             "sentence_id",
             "speech_id",
             "session_date",
