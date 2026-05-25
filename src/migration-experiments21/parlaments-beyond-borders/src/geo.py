@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import polars as pl
+import pycountry
 
-from src.config import EU_ENTITIES, FRENCH_OVERSEAS
+from src.config import ANALYTICAL_REGIONS, EU_ENTITIES, FRENCH_OVERSEAS
 
 
 # Explanation: Exact country-name mapping is safer here than running NER again,
@@ -104,6 +105,35 @@ COUNTRY_ISO3 = {
     "Yemen": "YEM",
 }
 
+# Add standard ISO countries from pycountry so valid countries such as Slovenia
+# or Palestine are not accidentally treated as unknown NER artifacts.
+for _country in pycountry.countries:
+    COUNTRY_ISO3.setdefault(_country.name, _country.alpha_3)
+    if hasattr(_country, "official_name"):
+        COUNTRY_ISO3.setdefault(_country.official_name, _country.alpha_3)
+    if hasattr(_country, "common_name"):
+        COUNTRY_ISO3.setdefault(_country.common_name, _country.alpha_3)
+
+COUNTRY_ISO3.update({
+    "Bolivia": "BOL",
+    "Brunei": "BRN",
+    "Congo": "COG",
+    "Democratic Republic of Congo": "COD",
+    "DR Congo": "COD",
+    "Iran": "IRN",
+    "Laos": "LAO",
+    "Moldova": "MDA",
+    "North Korea": "PRK",
+    "Palestine": "PSE",
+    "Russia": "RUS",
+    "South Korea": "KOR",
+    "Syria": "SYR",
+    "Tanzania": "TZA",
+    "Turkey": "TUR",
+    "Venezuela": "VEN",
+    "Vietnam": "VNM",
+})
+
 # Explanation: UN WEOG-style grouping for the hypothesis comparison. France itself
 # is excluded earlier, but the broader WEOG comparison still matters for mentions.
 WEOG_COUNTRIES = {
@@ -118,8 +148,8 @@ WEOG_COUNTRIES = {
 
 def iso3_for_entity(entity: str | None) -> str | None:
     """Return ISO3 country code for a canonical entity name when available."""
-    # Explanation: EU and French overseas territories are not assigned foreign-state ISO3.
-    if entity is None or entity in EU_ENTITIES or entity in FRENCH_OVERSEAS:
+    # Explanation: EU, analytical regions, and territories are not assigned foreign-state ISO3.
+    if entity is None or entity in EU_ENTITIES or entity in FRENCH_OVERSEAS or entity in ANALYTICAL_REGIONS:
         return None
     return COUNTRY_ISO3.get(entity)
 
@@ -130,12 +160,27 @@ def weog_group_for_entity(entity: str | None) -> str:
     if entity in EU_ENTITIES:
         return "european_union"
     if entity in FRENCH_OVERSEAS:
-        return "french_overseas"
+        return "territory_region"
+    if entity in ANALYTICAL_REGIONS:
+        return "analytical_region"
     if entity in WEOG_COUNTRIES:
         return "weog"
     if entity in COUNTRY_ISO3:
         return "non_weog"
     return "unknown"
+
+
+def entity_scope_for_entity(entity: str | None) -> str:
+    """Return strict target-entity scope: country, EU, region, or invalid."""
+    if entity in EU_ENTITIES:
+        return "european_union"
+    if entity in FRENCH_OVERSEAS:
+        return "territory_region"
+    if entity in ANALYTICAL_REGIONS:
+        return "analytical_region"
+    if entity in COUNTRY_ISO3:
+        return "country"
+    return "invalid"
 
 
 def add_country_metadata(df: pl.DataFrame) -> pl.DataFrame:
@@ -148,4 +193,7 @@ def add_country_metadata(df: pl.DataFrame) -> pl.DataFrame:
         pl.col("entity_content")
         .map_elements(weog_group_for_entity, return_dtype=pl.Utf8)
         .alias("weog_group"),
+        pl.col("entity_content")
+        .map_elements(entity_scope_for_entity, return_dtype=pl.Utf8)
+        .alias("entity_scope"),
     ])

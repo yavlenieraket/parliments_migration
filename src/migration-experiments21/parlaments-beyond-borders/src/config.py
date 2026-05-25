@@ -64,31 +64,40 @@ FRENCH_CITIES_REGIONS = {
     "Rhône", "Val", "Hautes",
 }
 
-# Geographic terms that are not countries.
-# Maghreb, Sahel, Balkans may be analytically meaningful collective references,
-# but they are not single countries.
+# Analytical region/route entities that are allowed as target entities even
+# though they are not countries. These are deliberately broad regions, migration
+# routes, or territorial cases. Cities, events, people, and vague directions are
+# excluded from target-entity analysis and can only appear inside context/fact
+# snippets.
+ANALYTICAL_REGIONS = {
+    "Europe", "European States", "Western Europe", "Eastern Europe",
+    "Central Europe", "Africa", "African States", "North Africa",
+    "Sub-Saharan Africa", "West Africa", "Saharan Africa", "Asia",
+    "Asia Minor", "Middle East", "Near East", "Levant", "Maghreb",
+    "Sahel", "Balkans", "Balkan route", "Mediterranean",
+    "Mediterranean Sea", "Central Mediterranean", "Atlantic",
+    "North Sea", "Black Sea", "Aegean Sea", "English Channel",
+    "Channel", "Schengen Area", "Schengen", "Caribbean",
+    "West Indies", "Indian Ocean", "Pacific", "Sahara",
+    "Darfur", "Chechnya", "Nagorny Karabakh", "Kashmir",
+    "Overseas Territories",
+}
+
+# Geographic terms and NER artifacts that are not valid target entities.
 GEO_NON_COUNTRY = {
-    "Europe", "Mediterranean", "Atlantic", "Sahel",
-    "Maghreb", "Balkans", "Middle East", "Africa", "Asia",
     "the Union",
-    "Member States", "States",
-    "Schengen Area", "Schengen",
-    "the West", "Western Europe", "Eastern Europe",
-    "North Africa", "Sub-Saharan Africa", "Central Europe",
-    "sub-Saharan Africa", "the Mediterranean", "Mediterranean Sea",
-    "the Channel", "Channel", "North Sea", "South",
+    "Member States", "States", "Member State",
+    "the West", "the Mediterranean", "the Channel",
+    "Balkan",
+    "South", "North", "East", "West",
     "Dublin", "Brussels", "Sandhurst", "Aquarius", "Travellers",
-    "English Channel", "Balkan", "Pacific", "West Africa", "Member State",
-    "European States", "Sorbonne", "The Republic", "Levant",
-    "Roya Valley", "Central Mediterranean", "Idlib", "No Border",
-    "Fifth Republic", "Indian Ocean", "Near East", "Médecins",
-    "Chapel", "Chapel Gate", "La République", "Islamic State",
-    "Territory", "African States", "Saharan", "Place de la République",
-    "Darfur", "Caribbean", "West Indies", "Ile", "Samos",
-    "Nagorny Karabakh", "Lampedusa", "Daesh", "Overseas Territories",
-    "Chechnya", "Tindouf", "Sahara", "-Saharan Africa", "New York",
+    "Sorbonne", "The Republic", "Roya Valley", "Idlib", "No Border",
+    "Fifth Republic", "Médecins", "Chapel", "Chapel Gate",
+    "La République", "Islamic State", "Territory", "Saharan",
+    "Place de la République", "Ile", "Samos", "Lampedusa",
+    "Daesh", "Tindouf", "-Saharan Africa", "New York",
     "London", "Berlin", "Abidjan", "Kabul", "Marrakech", "Agadez",
-    "Niamey", "Ankara", "Dakar", "North", "Saint", "Sainte", "Terre",
+    "Niamey", "Ankara", "Dakar", "Saint", "Sainte", "Terre",
     "Côte",
 }
 

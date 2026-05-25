@@ -185,3 +185,69 @@ def save_agency_outputs(
         "policy_agency_edges_csv": edge_path,
         "policy_agency_graphml": graphml_path,
     }
+
+
+def policy_hub_pagerank(
+    edges: pl.DataFrame,
+    include_neutral: bool = False,
+) -> pl.DataFrame:
+    """Rank cited countries/entities as policy hubs in the directed agency network."""
+    # Explanation: With a single-country pilot this is mostly a weighted visibility
+    # rank, but it preserves the same PageRank schema for multi-country expansion.
+    working = edges
+    if not include_neutral:
+        working = working.filter(pl.col("policy_agency_type") != "neutral_reporting")
+
+    outgoing: dict[str, dict[str, float]] = {}
+    nodes: set[str] = set()
+    for row in working.to_dicts():
+        source = row["source_country"]
+        target = row["target_entity"]
+        weight = float(row["weight"])
+        nodes.update([source, target])
+        outgoing.setdefault(source, {})
+        outgoing[source][target] = outgoing[source].get(target, 0.0) + weight
+
+    if not outgoing:
+        return pl.DataFrame({
+            "target_entity": [],
+            "pagerank": [],
+            "total_weight": [],
+            "dominant_policy_agency": [],
+        })
+
+    damping = 0.85
+    n_nodes = len(nodes)
+    ranks = {node: 1.0 / n_nodes for node in nodes}
+    for _ in range(100):
+        dangling_rank = sum(ranks[node] for node in nodes if node not in outgoing)
+        next_ranks = {
+            node: (1.0 - damping) / n_nodes + damping * dangling_rank / n_nodes
+            for node in nodes
+        }
+        for source, targets in outgoing.items():
+            total_weight = sum(targets.values())
+            if total_weight <= 0:
+                continue
+            for target, weight in targets.items():
+                next_ranks[target] += damping * ranks[source] * weight / total_weight
+        delta = sum(abs(next_ranks[node] - ranks[node]) for node in nodes)
+        ranks = next_ranks
+        if delta < 1e-10:
+            break
+
+    summary = (
+        working
+        .group_by("target_entity")
+        .agg([
+            pl.col("weight").sum().alias("total_weight"),
+            pl.col("policy_agency_type").mode().first().alias("dominant_policy_agency"),
+        ])
+        .with_columns(
+            pl.col("target_entity")
+            .map_elements(lambda node: float(ranks.get(node, 0.0)), return_dtype=pl.Float64)
+            .alias("pagerank")
+        )
+        .sort("pagerank", descending=True)
+    )
+    return summary.select(["target_entity", "pagerank", "total_weight", "dominant_policy_agency"])

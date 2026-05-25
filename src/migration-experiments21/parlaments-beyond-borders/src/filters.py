@@ -5,6 +5,7 @@ import re
 import polars as pl
 
 from src.config import (
+    ANALYTICAL_REGIONS,
     EU_ENTITIES,
     EUROPEAN_COUNTRIES,
     EXCLUDE_FROM_FOREIGN,
@@ -12,6 +13,7 @@ from src.config import (
     MIGRATION_KEYWORDS,
     MIGRATION_TOPIC,
 )
+from src.geo import COUNTRY_ISO3
 
 
 COUNTRY_ALIASES = {
@@ -65,6 +67,19 @@ COUNTRY_ALIASES = {
     "Ivory Coast": "Cote d'Ivoire",
     "Futuna": "Wallis and Futuna",
     "Mamoudzou": "Mayotte",
+    "Republic of Turkey": "Turkey",
+    "Turkish Republic": "Turkey",
+    "Türkiye": "Turkey",
+    "Turkiye": "Turkey",
+    "İstanbul": "Istanbul",
+    "Palestine": "Palestine",
+    "State of Palestine": "Palestine",
+    "Russian Federation": "Russia",
+    "Slovenia": "Slovenia",
+    "Bosnia": "Bosnia and Herzegovina",
+    "Macedonia": "North Macedonia",
+    "Cape Verde": "Cabo Verde",
+    "Congo": "Congo",
 }
 
 EU_ENTITY_ALIASES = {"European Union", "EU"}
@@ -142,14 +157,21 @@ def filter_foreign(lf: pl.LazyFrame) -> pl.LazyFrame:
     return lf.filter(~pl.col("entity_content").is_in(EXCLUDE_FROM_FOREIGN))
 
 
+def filter_allowed_target_entities(lf: pl.LazyFrame) -> pl.LazyFrame:
+    """Keep only valid target entities: countries, EU, or approved regions."""
+    allowed = set(COUNTRY_ISO3) | set(EU_ENTITIES) | set(FRENCH_OVERSEAS) | set(ANALYTICAL_REGIONS)
+    return lf.filter(pl.col("entity_content").is_in(sorted(allowed)))
+
+
 def add_geo_class(lf: pl.LazyFrame) -> pl.LazyFrame:
-    """Add a column distinguishing foreign countries from French overseas territories."""
-    # Explanation: EU and overseas territories are not foreign countries, but we keep them visible.
+    """Add a column distinguishing countries, EU, and approved regions."""
     return lf.with_columns(
         pl.when(pl.col("entity_content").is_in(EU_ENTITIES))
         .then(pl.lit("european_union"))
         .when(pl.col("entity_content").is_in(FRENCH_OVERSEAS))
-        .then(pl.lit("french_overseas"))
+        .then(pl.lit("territory_region"))
+        .when(pl.col("entity_content").is_in(ANALYTICAL_REGIONS))
+        .then(pl.lit("analytical_region"))
         .otherwise(pl.lit("foreign"))
         .alias("geo_class")
     )
@@ -163,7 +185,9 @@ def add_region_group(lf: pl.LazyFrame) -> pl.LazyFrame:
         pl.when(pl.col("entity_content").is_in(EU_ENTITIES))
         .then(pl.lit("european_union"))
         .when(pl.col("entity_content").is_in(FRENCH_OVERSEAS))
-        .then(pl.lit("french_overseas"))
+        .then(pl.lit("territory_region"))
+        .when(pl.col("entity_content").is_in(ANALYTICAL_REGIONS))
+        .then(pl.lit("analytical_region"))
         .when(pl.col("entity_content").is_in(EUROPEAN_COUNTRIES))
         .then(pl.lit("european_country"))
         .otherwise(pl.lit("non_european_country"))
@@ -205,6 +229,7 @@ def build_migration_mentions(
         .pipe(filter_country_mentions)
         .pipe(normalize_country_names)
         .pipe(filter_foreign)
+        .pipe(filter_allowed_target_entities)
         .pipe(add_geo_class)
         .pipe(add_region_group)
         .pipe(build_context_window)

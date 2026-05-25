@@ -51,6 +51,10 @@ ParlaMint extracted parquet files. Not committed to the repo.
 Place files at:
 
 - `data/parlamint_extracted/Table1_Fact/FRA/FRA_2018_facts.parquet`
+- `data/parlamint_extracted/Table1_Fact/GRC/GRC_2015_facts.parquet`
+- `data/parlamint_extracted/Table1_Fact/TUR/TUR_2015_facts.parquet`
+- `data/parlamint_extracted/Table1_Fact/ITA/ITA_2013_facts.parquet`
+- `data/parlamint_extracted/Table1_Fact/GBR/GBR_2015_facts.parquet`
 - `data/parlamint_extracted/Table2_People/Master_People.parquet`
 - `data/parlamint_extracted/Table3_Orgs/Master_Orgs.parquet`
 - `data/parlamint_extracted/Table4_Affiliations/Master_Affiliations.parquet`
@@ -67,6 +71,55 @@ For the extended 2017-2022 analysis, run:
 ```bash
 jupyter notebook notebooks/02_fra_2017_2022_extended.ipynb
 ```
+
+For the same extended notebook workflow across all available studied country
+folders, run:
+
+```bash
+jupyter notebook notebooks/03_grc_tur_ita_gbr_extended.ipynb
+```
+
+To apply the same extended pipeline to every studied country folder, run:
+
+```bash
+python scripts/run_extended_analysis.py
+```
+
+This writes each country to its own processed directory, for example
+`data/processed/AUT_2015_2022/`, `data/processed/FRA_2017_2022/`,
+`data/processed/NLD_2015_2022/`, and `data/processed/UKR_2015_2022/`.
+
+To regenerate every per-country visualization bundle, the combined dyadic
+visualizations, and a single browser index of all figure files, run:
+
+```bash
+python scripts/generate_all_country_visualizations.py
+```
+
+This also creates direct cross-country comparison charts under
+`data/processed/ALL_AVAILABLE_COUNTRIES_comparisons/`, including comparison views
+for yearly volume, total mentions, shared target countries, mean concreteness,
+target-level concreteness, policy agency, narrative polarity, migration
+direction, migrant cohorts, policy measures, sentiment, and high-concreteness
+fact counts. The HTML index explains what each illustration asks and how to
+read it. The index begins with an analytical report on asymmetries, trends,
+special cases, and LLM-ready research leads. It also includes richer Plotly
+interactive comparison views for timelines, target heatmaps, entity-scope
+composition, concreteness/sentiment scatterplots, and reciprocal attention
+asymmetry.
+
+To verify that target entities are clean and every visualization bundle exists,
+run:
+
+```bash
+python scripts/validate_entities_and_visualizations.py
+```
+
+The validation checks that the target entity layer contains only countries, the
+European Union, approved analytical regions/routes, and approved territory
+regions. Cities, events, people, institutions, and vague directional words are
+not allowed as target entities; they can appear only inside context snippets or
+fact-map place labels.
 
 ## Extended 2017-2022 Methods
 
@@ -213,6 +266,9 @@ The extended notebook saves:
 - `data/processed/FRA_2017_2022_result_notes.md`
 - `data/processed/FRA_2017_2022_country_mention_profile.csv`
 - `data/processed/FRA_2017_2022_country_year_profile.csv`
+- `data/processed/FRA_2017_2022_country_year_concreteness_summary.csv`
+- `data/processed/FRA_2017_2022_concreteness_feature_patterns.csv`
+- `data/processed/FRA_2017_2022_concreteness_quote_examples.csv`
 - `data/processed/FRA_2017_2022_country_context_examples.csv`
 - `data/processed/FRA_2017_2022_cohort_policy_context_examples.csv`
 - `data/processed/FRA_2017_2022_diffusion_edges.csv`
@@ -220,10 +276,24 @@ The extended notebook saves:
 - `data/processed/FRA_2017_2022_diffusion_network.graphml`
 - `data/processed/FRA_2017_2022_policy_agency_edges.csv`
 - `data/processed/FRA_2017_2022_policy_agency_network.graphml`
+- `data/processed/FRA_2017_2022_policy_hubs_pagerank.csv`
 - `data/processed/FRA_2017_2022_high_concreteness_events.csv`
+- `data/processed/FRA_2017_2022_high_concreteness_events_gt4.csv`
+- `data/processed/FRA_2017_2022_all_concrete_event_mentions.csv`
+- `data/processed/FRA_2017_2022_europe_concrete_event_mentions.csv`
+- `data/processed/FRA_2017_2022_europe_concrete_conversation_summary.csv`
+- `data/processed/FRA_2017_2022_europe_concrete_conversation_year_summary.csv`
+- `data/processed/FRA_2017_2022_europe_geolocated_concrete_event_points.csv`
+- `data/processed/FRA_2017_2022_europe_concrete_event_mentions_unmatched_places.csv`
 - `data/processed/FRA_2017_2022_visible_country_summary.csv`
+- `data/processed/FRA_2017_2022_visible_country_summary_gt4.csv`
+- `data/processed/FRA_2017_2022_direction_agenda_by_entity.csv`
+- `data/processed/FRA_2017_2022_direction_agenda_by_party.csv`
 - `data/processed/figures_altair_extended/concreteness_density_by_weog.*`
 - `data/processed/figures_altair_extended/concreteness_by_year_region.*`
+- `data/processed/figures_altair_extended/country_concreteness_year_lines.*`
+- `data/processed/figures_altair_extended/concreteness_feature_pattern_heatmap.*`
+- `data/processed/figures_altair_extended/concreteness_quote_panels.html`
 - `data/processed/figures_altair_extended/diffusion_top_targets.*`
 - `data/processed/figures_altair_extended/cohort_policy_heatmap.*`
 - `data/processed/figures_altair_extended/country_concreteness_bubble.*`
@@ -235,10 +305,70 @@ Advanced interactive figures are saved here:
 
 - `data/processed/figures_interactive_advanced/policy_agency_network.html`
 - `data/processed/figures_interactive_advanced/policy_agency_country_heatmap.html`
+- `data/processed/figures_interactive_advanced/policy_hubs_pagerank.html`
+- `data/processed/figures_interactive_advanced/policy_hubs_pagerank.png`
 - `data/processed/figures_interactive_advanced/narrative_ternary.html`
+- `data/processed/figures_interactive_advanced/narrative_ternary_by_party.html`
+- `data/processed/figures_interactive_advanced/narrative_mirror_bars.html`
+- `data/processed/figures_interactive_advanced/narrative_mirror_bars.png`
+- `data/processed/figures_interactive_advanced/narrative_mirror_by_party.html`
+- `data/processed/figures_interactive_advanced/narrative_mirror_by_party.png`
+- `data/processed/figures_interactive_advanced/narrative_mirror_by_speaker_role.html`
+- `data/processed/figures_interactive_advanced/narrative_mirror_by_speaker_role.png`
 - `data/processed/figures_interactive_advanced/evidence_visibility_map.html`
+- `data/processed/figures_interactive_advanced/evidence_visibility_map_gt4.html`
 - `data/processed/figures_interactive_advanced/fact_density_timeline.html`
+- `data/processed/figures_interactive_advanced/fact_density_timeline_gt4.html`
+- `data/processed/figures_interactive_advanced/all_concrete_event_mentions_table.html`
+- `data/processed/figures_interactive_advanced/europe_concrete_event_mentions_table.html`
+- `data/processed/figures_interactive_advanced/concrete_conversations_dashboard.html`
+- `data/processed/figures_interactive_advanced/europe_concrete_conversation_map.html`
+- `data/processed/figures_interactive_advanced/europe_concrete_map_by_year.html`
+- `data/processed/figures_interactive_advanced/europe_concrete_event_timeline.html`
+- `data/processed/figures_interactive_advanced/europe_country_year_event_heatmap.html`
+- `data/processed/figures_interactive_advanced/europe_country_year_event_heatmap.png`
+- `data/processed/figures_interactive_advanced/europe_country_frame_heatmap.html`
+- `data/processed/figures_interactive_advanced/europe_country_frame_heatmap.png`
+- `data/processed/figures_interactive_advanced/europe_concrete_sankey.html`
+- `data/processed/figures_interactive_advanced/europe_concrete_treemap.html`
+- `data/processed/figures_interactive_advanced/europe_geolocated_concrete_event_point_map.html`
+- `data/processed/figures_interactive_advanced/europe_geolocated_concrete_event_timeline.html`
+- `data/processed/figures_interactive_advanced/concrete_conversations_explorer.html`
+- `data/processed/figures_interactive_advanced/direction_agenda_split_bars.html`
+- `data/processed/figures_interactive_advanced/direction_agenda_split_bars.png`
+- `data/processed/figures_interactive_advanced/direction_agenda_by_party.html`
+- `data/processed/figures_interactive_advanced/direction_agenda_by_party.png`
 
 The `.html` files are the primary interactive outputs. Static PNG export is
 attempted where the chart type supports it; complex layered/network charts may
 save only HTML and Vega-Lite JSON.
+
+To regenerate the requested advanced visualization bundle from the processed
+2017-2022 tables, run:
+
+```bash
+python scripts/generate_requested_visualizations.py
+```
+
+For non-France country folders, use `scripts/run_extended_analysis.py`; it
+generates the same diffusion, agency, concreteness, high-concreteness event,
+and interactive visualization outputs inside each country-specific processed
+directory.
+
+The multi-country notebook also includes the stricter dyadic data model in
+`src/data_model.py`: raw `entity_content` is resolved to
+`target_country_iso3`, migration filtering is applied at `speech_id` level,
+and then source-target bilateral matrices, concreteness matrices, asymmetry
+tables, and shock-window tables are generated. The current combined outputs for
+all available studied countries are saved under:
+
+- `data/processed/all_studied_countries_visualization_index.html`
+- `data/processed/ALL_AVAILABLE_COUNTRIES_dyadic_data_model/resolved_migration_country_mentions.parquet`
+- `data/processed/ALL_AVAILABLE_COUNTRIES_dyadic_data_model/bilateral_matrix.csv`
+- `data/processed/ALL_AVAILABLE_COUNTRIES_dyadic_data_model/bilateral_concreteness.csv`
+- `data/processed/ALL_AVAILABLE_COUNTRIES_dyadic_data_model/asymmetry_table.csv`
+- `data/processed/ALL_AVAILABLE_COUNTRIES_dyadic_data_model/shock_moria_fire_window.csv`
+- `data/processed/ALL_AVAILABLE_COUNTRIES_dyadic_data_model/shock_belarus_crisis_window.csv`
+- `data/processed/ALL_AVAILABLE_COUNTRIES_dyadic_data_model/shock_ukraine_war_window.csv`
+- `data/processed/ALL_AVAILABLE_COUNTRIES_dyadic_data_model/figures_data_model/*.html`
+- `data/processed/ALL_AVAILABLE_COUNTRIES_dyadic_data_model/figures_data_model/*.png`
