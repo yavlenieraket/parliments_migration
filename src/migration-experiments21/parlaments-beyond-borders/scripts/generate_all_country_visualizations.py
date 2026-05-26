@@ -247,6 +247,16 @@ VISUAL_EXPLANATIONS = {
         "question": "Which country pairs are most unequal in reciprocal attention?",
         "read": "Far-right/far-left points are strongest asymmetries. Hover to compare A->B and B->A counts.",
     },
+    "joint_similarity_map": {
+        "title": "Joint Similarity Map",
+        "question": "Which parliaments share a discursive geometry of migration, and which target countries cluster with them?",
+        "read": "Source and target bubbles pointing in the same direction indicate disproportionate attention. Use the coordinate CSV for residual checks before making strong claims.",
+    },
+    "comparative_matrix_atlas": {
+        "title": "Comparative Matrix Atlas",
+        "question": "How do all studied parliaments compare across every encoded analytical level at once?",
+        "read": "Start with the country-similarity matrix, then inspect the integrated feature matrix and row-normalized layer matrices for targets, policy, cohorts, agency, narratives, argument schemes, direction, sentiment, and concreteness.",
+    },
 }
 
 
@@ -1175,16 +1185,24 @@ def _explanation_for_path(path: Path) -> dict[str, str]:
     }
 
 
-def _figure_cards(section_dir: Path, root: Path) -> list[str]:
+def _relative_display_path(path: Path, root: Path) -> str:
+    try:
+        return path.relative_to(root).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def _figure_cards(section_dir: Path, root: Path, link_root: Path) -> list[str]:
     """Return HTML cards for all HTML/PNG figures under a directory."""
     cards = []
     for path in sorted(section_dir.rglob("*.html")) + sorted(section_dir.rglob("*.png")):
-        label = path.relative_to(root)
+        label = _relative_display_path(path, root)
+        href = _relative_display_path(path, link_root)
         explanation = _explanation_for_path(path)
         cards.append(
             "<article class='figure-card'>"
-            f"<h3><a href='{html.escape(str(path.resolve()))}'>{html.escape(explanation['title'])}</a></h3>"
-            f"<p class='path'>{html.escape(str(label))}</p>"
+            f"<h3><a href='{html.escape(href)}'>{html.escape(explanation['title'])}</a></h3>"
+            f"<p class='path'>{html.escape(label)}</p>"
             f"<p><strong>What it asks:</strong> {html.escape(explanation['question'])}</p>"
             f"<p><strong>How to read it:</strong> {html.escape(explanation['read'])}</p>"
             "</article>"
@@ -1201,39 +1219,40 @@ def save_visualization_index(
 ) -> Path:
     """Save a browser index of all generated visualizations."""
     output_path = output_path or (PROCESSED_DIR / "all_studied_countries_visualization_index.html")
+    link_root = output_path.parent
     blocks = []
     for country, country_dir in country_dirs.items():
         cards = []
         for folder in ["figures_altair_extended", "figures_interactive_advanced"]:
-            cards.extend(_figure_cards(country_dir / folder, country_dir))
+            cards.extend(_figure_cards(country_dir / folder, country_dir, link_root))
         blocks.append(
             "<section>"
             f"<h2>{html.escape(country)}</h2>"
-            f"<p class='section-path'>{html.escape(str(country_dir))}</p>"
+            f"<p class='section-path'>{html.escape(_relative_display_path(country_dir, link_root))}</p>"
             f"<div class='card-grid'>{''.join(cards) if cards else '<p>No figures found</p>'}</div>"
             "</section>"
         )
 
     if comparison_dir is not None:
-        comparison_cards = _figure_cards(comparison_dir, comparison_dir.parent)
+        comparison_cards = _figure_cards(comparison_dir, comparison_dir.parent, link_root)
         comparison_table = comparison_dir.parent / "comparison_summary_table.html"
         if comparison_table.exists():
-            comparison_cards.insert(0, _figure_cards(comparison_dir.parent, comparison_dir.parent)[0])
+            comparison_cards.insert(0, _figure_cards(comparison_dir.parent, comparison_dir.parent, link_root)[0])
         blocks.insert(
             0,
             "<section>"
             "<h2>Cross-country comparisons</h2>"
-            f"<p class='section-path'>{html.escape(str(comparison_dir.parent))}</p>"
+            f"<p class='section-path'>{html.escape(_relative_display_path(comparison_dir.parent, link_root))}</p>"
             "<p class='section-note'>These figures compare the five studied parliaments directly. They are the main place to look for differences and repeated patterns across countries.</p>"
             f"<div class='card-grid'>{''.join(comparison_cards) if comparison_cards else '<p>No figures found</p>'}</div>"
             "</section>",
         )
 
-    combined_cards = _figure_cards(combined_dir / "figures_data_model", combined_dir)
+    combined_cards = _figure_cards(combined_dir / "figures_data_model", combined_dir, link_root)
     blocks.append(
         "<section>"
         "<h2>Combined dyadic model</h2>"
-        f"<p class='section-path'>{html.escape(str(combined_dir))}</p>"
+        f"<p class='section-path'>{html.escape(_relative_display_path(combined_dir, link_root))}</p>"
         "<p class='section-note'>These visualizations use the resolved source-country to target-country model. They answer who looks at whom, how concretely, and how attention changes around shocks.</p>"
         f"<div class='card-grid'>{''.join(combined_cards) if combined_cards else '<p>No figures found</p>'}</div>"
         "</section>"
