@@ -1,0 +1,63 @@
+parliament_a,parliament_b,policy_similarity,shared_focus,n_a_to_b,n_b_to_a,relationship_type,tension_present,tension_nature,relation_type
+SVN,HUN,0.9854,refugees / border_control; refugees / national_security; refugees / international_law,262,65,mutual_complaint,true,"Both parliaments complain about the same third party (European Union) and each other's policies, indicating a level of competition and ideological friction despite policy similarity.",mutual_complaint
+EST,HRV,0.9848,refugees / border_control; refugees / national_security; refugees / integration,2,46,unilateral_modeling,false,"",unilateral_modeling
+POL,EST,0.9823,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,12,132,mutual_complaint,true,"Both parliaments criticize each other for not adequately addressing the refugee crisis and border security issues, despite sharing similar policies.",mutual_complaint
+HUN,LVA,0.9806,refugees / border_control; refugees / national_security; economic_migrants / integration,13,6,competitive_rivalry,true,mutual_complaint and criticism,competitive_rivalry
+BGR,EST,0.9798,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,7,3,unilateral_modeling,false,"",unilateral_modeling
+POL,HRV,0.9726,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,10,43,unilateral_modeling,false,"",unilateral_modeling
+ITA,TUR,0.9722,refugees / national_security; refugees / border_control; refugees / international_law,164,16,mutual_complaint,true,"Both parliaments criticize the EU and each other regarding migration policies and the handling of refugees, indicating a competitive and critical relationship.",mutual_complaint
+POL,BGR,0.9707,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,19,32,unilateral_modeling,false,"",unilateral_modeling
+HUN,AUT,0.9705,refugees / border_control; refugees / national_security; refugees / international_law,228,199,unilateral_modeling,false,"",unilateral_modeling
+CZE,EST,0.9703,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,5,22,mutual_complaint,true,"Both parliaments criticize each other and the EU, suggesting underlying friction despite policy similarities.",mutual_complaint
+ISL,BGR,0.9672,refugees / border_control; refugees / national_security; refugees / international_law,13,0,unilateral_modeling,false,"",unilateral_modeling
+BGR,GRC,0.9671,refugees / border_control; refugees / national_security; refugees / international_law,184,80,competitive_rivalry,true,competition for the same resources (migrants and EU funding),competitive_rivalry
+PRT,BIH,0.9666,refugees / international_law; refugees / national_security; refugees / border_control,1,0,unilateral_modeling,false,"",
+HUN,HRV,0.9637,refugees / border_control; refugees / national_security; economic_migrants / integration,95,128,mutual_complaint,true,"Both parliaments criticize each other's policies regarding refugees and border control, despite converging on similar policy measures.",mutual_complaint
+ISL,GRC,0.9628,refugees / border_control; refugees / national_security; refugees / international_law,384,0,unilateral_modeling,true,"ISL criticizes GRC's handling of refugees, indicating friction despite policy similarity.",unilateral_modeling
+GRC,NLD,0.9619,refugees / border_control; refugees / international_law; refugees / national_security,62,1022,unilateral_modeling,false,"",unilateral_modeling
+SVN,LVA,0.9592,refugees / border_control; refugees / national_security; economic_migrants / integration,11,2,unilateral_modeling,false,"",unilateral_modeling
+HUN,BGR,0.9589,refugees / border_control; refugees / national_security; refugees / international_law,63,50,mutual_acknowledged_alignment,false,"",mutual_acknowledged_alignment
+HRV,LVA,0.9588,refugees / border_control; refugees / national_security; economic_migrants / integration,4,5,unilateral_modeling,false,"",unilateral_modeling
+SWE,NLD,0.9587,refugees / border_control; refugees / international_law; refugees / national_security,37,94,unilateral_modeling,false,"",unilateral_modeling
+SVN,BGR,0.9579,refugees / border_control; refugees / national_security; refugees / international_law,21,2,unilateral_modeling,false,"",unilateral_modeling
+HUN,EST,0.9576,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,6,61,unilateral_modeling,true,mutual_complaint and ideological friction,unilateral_modeling
+SVN,AUT,0.9572,refugees / border_control; refugees / national_security; refugees / international_law,923,64,unilateral_modeling,false,"",unilateral_modeling
+BGR,HRV,0.9565,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,7,34,unilateral_modeling,false,"",unilateral_modeling
+SWE,ISL,0.9553,refugees / border_control; refugees / national_security; refugees / international_law,5,162,unilateral_modeling,false,"",unilateral_modeling
+POL,CZE,0.9548,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,35,120,unilateral_modeling,false,"",unilateral_modeling
+AUT,NLD,0.9546,refugees / border_control; refugees / national_security; refugees / international_law,19,110,unilateral_modeling,true,competitive_rivalry,unilateral_modeling
+EST,LVA,0.9542,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,168,58,competitive_rivalry,true,Both parliaments express mutual criticism and competition regarding the handling of refugees and border control measures.,competitive_rivalry
+SVN,HRV,0.9539,refugees / border_control; refugees / national_security; economic_migrants / integration,579,150,unilateral_modeling,false,"",unilateral_modeling
+CZE,BGR,0.9538,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,48,8,unilateral_modeling,true,mutual_complaint and competitive_rivalry,unilateral_modeling
+POL,HUN,0.9532,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,68,141,competitive_rivalry,true,mutual criticism and competition over migration management,competitive_rivalry
+AUT,BGR,0.9523,refugees / border_control; refugees / national_security; refugees / international_law,29,30,mutual_acknowledged_alignment,false,"",mutual_acknowledged_alignment
+AUT,GRC,0.9518,refugees / border_control; refugees / national_security; refugees / international_law,263,47,unilateral_modeling,true,mutual_complaint and criticism,unilateral_modeling
+NOR,AUT,0.9514,refugees / border_control; refugees / national_security; refugees / international_law,13,9,mutual_acknowledged_alignment,false,"",mutual_acknowledged_alignment
+SWE,GRC,0.9511,refugees / border_control; refugees / national_security; refugees / international_law,193,48,ideological_friction_despite_similarity,true,mutual criticism and blame,ideological_friction_despite_similarity
+POL,NOR,0.951,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,15,87,unilateral_modeling,false,"",unilateral_modeling
+ESP,NLD,0.9506,refugees / border_control; refugees / international_law; refugees / national_security,3,125,unilateral_modeling,false,"",unilateral_modeling
+SWE,ESP,0.9495,refugees / border_control; refugees / international_law; refugees / national_security,17,10,mutual_complaint,true,"Both parliaments criticize each other and other countries for handling refugee crises poorly, indicating a competitive tone despite policy similarities.",mutual_complaint
+POL,AUT,0.9488,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,24,66,unilateral_modeling,false,"",unilateral_modeling
+BGR,GBR,0.9479,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,90,0,unilateral_modeling,false,"",unilateral_modeling
+BEL,NLD,0.947,refugees / border_control; refugees / international_law; refugees / national_security,407,146,unilateral_modeling,false,"",unilateral_modeling
+ISL,EST,0.9468,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,0,1,unilateral_modeling,false,"",
+CZE,HRV,0.9465,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,23,29,mutual_acknowledged_alignment,false,"",mutual_acknowledged_alignment
+AUT,LVA,0.9459,refugees / border_control; refugees / national_security; refugees / international_law,6,2,unilateral_modeling,false,"",unilateral_modeling
+SVN,GBR,0.9456,refugees / border_control; refugees / national_security; refugees / international_law,90,0,mutual_complaint,true,"Slovenia criticizes the UK for its policies towards refugees and border control, while the UK does not reciprocate any significant mentions.",mutual_complaint
+BGR,LVA,0.9454,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,3,1,unilateral_modeling,false,"",unilateral_modeling
+GBR,HRV,0.9453,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,0,212,unilateral_modeling,false,"",unilateral_modeling
+POL,GBR,0.945,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,314,0,unilateral_modeling,false,"",unilateral_modeling
+SVN,EST,0.9444,refugees / border_control; refugees / national_security; refugees / international_law,6,12,unilateral_modeling,false,"",unilateral_modeling
+ISL,ITA,0.9438,refugees / national_security; refugees / border_control; refugees / international_law,105,1,mutual_complaint,true,"ISL criticizes ITA for handling refugees and suggests that Italian policies lead to refugees being sent there, indicating a sense of unfair burden-sharing.",mutual_complaint
+NLD,TUR,0.8503,refugees / border_control; refugees / national_security; refugees / international_law,2903,15,mutual_complaint,true,"NLD criticizes Turkey for its handling of refugees and asylum seekers, while Turkey criticizes NLD and other countries for rising far-right parties and their treatment of Turkish expatriates.",mutual_complaint
+GRC,TUR,0.9169,refugees / national_security; refugees / border_control; refugees / international_law,1814,158,mutual_complaint,true,blame and competition over the handling of refugees and the implementation of agreements.,mutual_complaint
+BEL,TUR,0.8043,refugees / national_security; refugees / border_control; refugees / international_law,1387,11,competitive_rivalry,true,blame and competition over the treatment of refugees and asylum seekers,competitive_rivalry
+SWE,TUR,0.8792,refugees / national_security; refugees / border_control; refugees / international_law,1022,16,mutual_complaint,true,criticism and blame regarding migration policies and actions,mutual_complaint
+BEL,GRC,0.8959,refugees / border_control; refugees / national_security; refugees / international_law,812,36,unilateral_modeling,false,"",unilateral_modeling
+CZE,TUR,0.9031,refugees / national_security; refugees / border_control; refugees / allocation_of_resources,690,0,unilateral_modeling,false,"",unilateral_modeling
+NOR,GRC,0.9153,refugees / border_control; refugees / national_security; refugees / international_law,649,20,unilateral_modeling,false,"",unilateral_modeling
+GBR,NLD,0.88,refugees / border_control; refugees / national_security; refugees / international_law,0,630,unilateral_modeling,false,"",unilateral_modeling
+BEL,GBR,0.8502,refugees / border_control; refugees / national_security; refugees / allocation_of_resources,590,0,unilateral_modeling,false,"",unilateral_modeling
+BGR,TUR,0.9391,refugees / national_security; refugees / border_control; refugees / international_law,512,73,unilateral_modeling,false,"",unilateral_modeling
+SWE,FIN,0.8857,refugees / border_control; refugees / national_security; refugees / international_law,116,454,unilateral_modeling,false,"",unilateral_modeling
+BEL,ITA,0.8642,refugees / national_security; refugees / border_control; refugees / international_law,544,11,diffusion_chain,false,"",diffusion_chain

@@ -1,0 +1,262 @@
+# Country Role Frames Pilot
+
+Targets: TUR, UKR, SYR, LBY, BLR, MAR
+Rows: 1200
+
+## TARGET_EXPORT (458)
+
+- **AUT -> TUR** NEU conf=0.8: return agreements
+  - Austria is involved in return agreements with Turkey.
+- **AUT -> TUR** NEU conf=0.8: relocate what our responsibility
+  - The speaker discusses the idea of relocating responsibility towards Turkey.
+- **AUT -> TUR** NEG conf=0.8: millions of people are now refugees
+  - Turkey is described as a location where refugees are located, implying negative consequences.
+- **AUT -> TUR** POS conf=0.8: to reduce the burden on these countries
+  - The speaker calls for reducing the burden on Turkey by providing more accommodation and funding.
+- **AUT -> TUR** POS conf=0.8: can take a step
+  - EU hopes Turkey will take steps to help set up protection zones.
+- **AUT -> TUR** POS conf=0.8: more people in other countries
+  - The speaker advocates for providing more aid to countries like Turkey.
+- **BEL -> TUR** NEG conf=0.8: together with Greece , Turkey and Spain
+  - Belgium is criticized alongside Turkey for poor employment of migrants.
+- **BEL -> TUR** NEG conf=0.8: suspended aid to more than 1.7 million
+  - Turkey suspended aid due to political reasons.
+- **BEL -> TUR** NEG conf=0.8: suspended its food aid
+  - Turkey is the location where food aid was suspended for Syrian refugees.
+- **BEL -> TUR** NEG conf=0.8: they compete with local artisans and workers
+  - The mention of competition from refugees endangering local businesses is a negative portrayal.
+- **BEL -> TUR** NEG conf=0.8: blockage in the issue of exit permits by Turkey
+  - Turkey blocked exit permits, hindering refugee transfers to Belgium.
+- **CZE -> TUR** POS conf=0.8: ally and care
+  - The speaker describes Turkey as an ally and highlights its efforts in caring for refugees.
+- **CZE -> TUR** NEU conf=0.8: care for the millions of refugees
+  - The Czech Republic is described as an ally and asked about its position regarding Turkey's refugee care.
+- **CZE -> TUR** NEG conf=0.8: take care of those refugees
+  - The Czech speaker implies that Turkey is not handling refugees properly and Europe should intervene.
+- **CZE -> TUR** NEG conf=0.8: take care of those refugees
+  - The Czech speaker implies that Turkey is not handling refugees properly and Europe should intervene.
+- **CZE -> TUR** POS conf=0.8: help Turkey economically
+  - The speaker suggests economic assistance to Turkey.
+- **CZE -> TUR** POS conf=0.8: ready to help financially
+  - Czech Republic offers financial assistance to Turkey
+- **CZE -> TUR** NEG conf=0.8: providing shelter and food
+  - The mention of Turkey's efforts to provide shelter and food is followed by negative consequences described.
+- **CZE -> TUR** POS conf=0.8: send funds, send our specialists
+  - Czech government plans to provide financial and expert support to Turkey.
+- **CZE -> TUR** POS conf=0.8: strengthening humanitarian aid
+  - Czech Republic plans to provide aid to refugees in Turkey.
+
+## SOURCE_IMPORT (407)
+
+- **AUT -> TUR** NEG conf=0.85: expelled from Turkey
+  - The mention of expulsion indicates a source of pressure or issue coming from Turkey.
+- **AUT -> TUR** POS conf=0.8: Despite existing legislation
+  - The mention of a church being approved after 90 years suggests a positive development in terms of religious freedom.
+- **AUT -> TUR** NEU conf=0.8: more than 4 million refugees
+  - Turkey is mentioned as the location where many refugees are located.
+- **AUT -> TUR** NEU conf=0.8: 2 million to 2.5 million refugees in Turkey
+  - Turkey is described as hosting a large number of refugees, which implies a source of migrants.
+- **AUT -> TUR** NEU conf=0.8: 1.7 million in Turkey
+  - Turkey is cited as a source of Syrian refugees.
+- **AUT -> TUR** NEG conf=0.8: more than one million refugees sit in Turkey
+  - Turkey is presented as the source of a large number of refugees.
+- **AUT -> TUR** NEG conf=0.8: threw their little sons and daughters
+  - The mention of fathers throwing their children to cross the border highlights a negative situation caused by the import of migrants from Turkey.
+- **AUT -> TUR** NEG conf=0.8: from Turkey to Greece
+  - Turkey is shown as a transit point in a negative migration route.
+- **AUT -> TUR** NEG conf=0.8: from Turkey to Greece
+  - Turkey is shown as a transit point in a negative migration route.
+- **AUT -> TUR** NEU conf=0.8: 2 million refugees from Afghanistan in Iran
+  - Referring to the number of refugees from Afghanistan in Iran as a context.
+- **BEL -> TUR** POS conf=0.8: re-established from Turkey
+  - Refers to refugees arriving from Turkey.
+- **BEL -> TUR** NEU conf=0.8: refugees from Turkey
+  - Turkey is the source of refugees being discussed.
+- **BEL -> TUR** NEU conf=0.8: refugees from Turkey
+  - Turkey is the source of refugees being discussed.
+- **BEL -> TUR** NEU conf=0.8: in Turkey
+  - The mention of Turkey is in the context of a selection mission and interviews conducted there.
+- **BEL -> TUR** NEU conf=0.8: three from Turkey
+  - Turkey is listed among the nationalities of migrants without additional context indicating a specific role.
+- **BEL -> TUR** NEG conf=0.8: we are only doing better than Turkey
+  - Compared to Turkey, the speaker country is performing worse.
+- **BEL -> TUR** POS conf=0.8: Syrian refugee camps in Turkey
+  - Belgium mentions financing refugee camps in Turkey, indicating support.
+- **BEL -> TUR** NEU conf=0.8: 2,200,000 Syrian refugees have been welcomed to Turkey
+  - Turkey is providing refuge to Syrian refugees, which is an import of people.
+- **BEL -> TUR** POS conf=0.8: Turkish metropolises
+  - Turkey is providing refuge and financial support to Syrians.
+- **BEL -> TUR** NEU conf=0.8: Seventy-five Syrian refugees in Turkey
+  - Refugees are coming from Turkey to Belgium for resettlement.
+
+## ADVERSARY_BLAME (208)
+
+- **AUT -> TUR** NEG conf=0.8: which make an expansive policy here
+  - Turkey is blamed for an expansive policy that affects Austria.
+- **AUT -> TUR** NEG conf=0.8: Turkish boys talk about football results
+  - The mention of Turkish officials writing negatively about the EU is framed as a problem.
+- **AUT -> TUR** NEG conf=0.8: they will come to us to millions
+  - Turkey is blamed for potential influx of migrants.
+- **BEL -> TUR** NEG conf=0.8: they consciously allow
+  - Turkey is blamed for allowing degrading abuses.
+- **BEL -> TUR** NEG conf=0.85: refuses to restrict
+  - Turkey is blamed for not restricting illegal immigration.
+- **BEL -> TUR** NEG conf=0.8: refuses to restrict illegal immigration
+  - Turkey is blamed for refusing to restrict illegal immigration.
+- **CZE -> TUR** NEG conf=0.8: Kurdish Autonomous Region is one of the last military entities to defend the Islamic State
+  - Turkey is indirectly blamed for not controlling the border effectively.
+- **CZE -> TUR** NEG conf=0.8: smuggling people from Turkey
+  - Turkey is blamed for being a source of people smuggling.
+- **CZE -> TUR** NEG conf=0.8: smuggling people from Turkey
+  - Turkey is blamed for being a source of people smuggling.
+- **ESP -> TUR** NEG conf=0.8: Turkey is bombing the Turks
+  - Turkey is blamed for causing confusion and potentially worsening the humanitarian crisis.
+- **ESP -> TUR** NEG conf=0.9: shameful response to the arrival of the displaced population
+  - Turkey is blamed for the inhumane policies and hot returns.
+- **ESP -> TUR** NEG conf=0.9: shameful response to the arrival of the displaced population
+  - Turkey is blamed for the inhumane policies and hot returns.
+- **ESP -> TUR** NEG conf=0.9: a safe country
+  - Turkey is blamed for being perceived as a safe country for refugees.
+- **ESP -> TUR** NEG conf=0.8: Turkish authorities have carried out returns
+  - The mention of Turkish authorities forcing returns to dangerous areas indicates blame.
+- **FRA -> TUR** NEG conf=0.9: instrumentalisation of refugees
+  - Turkey is blamed for instrumentalising refugees and interfering with European policies.
+- **FRA -> TUR** NEG conf=0.85: instrumentalisation of refugees
+  - Turkey is blamed for instrumentalising refugees and insulting European partners.
+- **FRA -> TUR** NEG conf=0.9: Turkey blackmails
+  - Turkey is blamed for potential border opening and migration pressure.
+- **FRA -> TUR** NEG conf=0.9: Mr Erdogan's Turkey
+  - Turkey is blamed for morally destroying refugees through agreements.
+- **GRC -> TUR** NEG conf=0.9: massive entry of illegal immigrants from Turkey
+  - Turkey is blamed for the illegal immigration and its potential negative impacts.
+- **GRC -> TUR** NEG conf=0.9: taking orders from the secret services
+  - Turkey is blamed for sending jihadists to the speaker's country.
+
+## REFERENTIAL (72)
+
+- **AUT -> TUR** NEU conf=0.8: Let 's take a look at Turkey
+  - The mention of Turkey is used to introduce a topic without implying any specific action or stance.
+- **BEL -> TUR** NEU conf=0.8: a city in Turkey
+  - Turkey is mentioned as a location context for the refugee camp.
+- **CZE -> TUR** NEU conf=0.8: our ally in NATO
+  - Turkey is mentioned as an ally in NATO contextually.
+- **ITA -> TUR** NEU conf=0.8: neighbouring countries with Syria
+  - Turkey is mentioned as a location where refugees are located.
+- **NLD -> TUR** NEU conf=0.8: travelled to Turkey
+  - The mention of Turkey is in a descriptive context about a person's history.
+- **NLD -> TUR** NEU conf=0.8: Turkey
+  - Turkey is mentioned as a location where refugees are taken care of.
+- **SWE -> TUR** NEU conf=0.8: Turkey
+  - Turkey is mentioned descriptively in the context of a view from a beach.
+- **SWE -> TUR** NEU conf=0.8: Both Johanna Jönsson and I were in Turkey
+  - The mention of Turkey is in the context of a personal visit, not as a source, target, or model.
+- **AUT -> UKR** NEU conf=0.8: eastern Ukraine
+  - Ukraine is mentioned in context of a conflict without direct action or comparison.
+- **BEL -> UKR** NEU conf=0.8: Ukraine
+  - Ukraine is mentioned in the context of background and support without direct action.
+- **BEL -> UKR** NEU conf=0.8: visa waiver reserved for biometric passports
+  - The mention is purely contextual about visa rules without direct action or comparison.
+- **CZE -> UKR** NEU conf=0.8: the conflict in Ukraine
+  - Ukraine is mentioned as a context for existing risks but not as a source or target of action.
+- **CZE -> UKR** NEU conf=0.8: the situation in Ukraine
+  - Ukraine is mentioned in context without specific action or comparison.
+- **ESP -> UKR** NEU conf=0.8: Ukraine
+  - Ukraine is mentioned as an example among other countries experiencing tragic realities.
+- **ESP -> UKR** NEG conf=0.8: regarding this appearance of the President of the Government in relation to the invasion, aggression, crisis, the war established by the autocrat leader Vladimir Putin in Ukraine
+  - The mention of Ukraine is in the context of a war and aggression, which is negative.
+- **FRA -> UKR** NEU conf=0.8: I am thinking of Syria , Libya and Ukraine
+  - Ukraine is mentioned as part of a list of countries facing crises, without specific action or comparison.
+- **FRA -> UKR** NEU conf=0.8: Ukraine
+  - Ukraine is mentioned contextually without specific action or comparison.
+- **GRC -> UKR** NEU conf=0.8: in the north of Ukraine
+  - Ukraine is mentioned as a geographical reference point in a broader context of instability.
+- **GRC -> UKR** NEU conf=0.8: starting from Ukraine and reaching Syria
+  - Ukraine is mentioned as part of a geographical context without direct action or comparison.
+- **ITA -> UKR** NEU conf=0.8: the situation in Ukraine
+  - Ukraine is mentioned in the context of global challenges but not as a source or target of action.
+
+## MODEL_EXEMPLAR (29)
+
+- **ESP -> TUR** NEU conf=0.8: Spanish model should be the guide
+  - Spain uses Turkey as a model for border policy.
+- **ITA -> TUR** POS conf=0.8: a stable and democratic Turkey
+  - Turkey is presented as a positive example of stability and democracy.
+- **ITA -> TUR** NEG conf=0.8: what kind of relationship we want to have with Turkey
+  - Turkey is used as a negative example, specifically in relation to terrorism.
+- **POL -> TUR** NEU conf=0.8: You have a great man there - he said - Tusk , who can do anything
+  - Turkey is referenced as having a capable leader, but neutrally.
+- **AUT -> UKR** NEU conf=0.8: whether Greece was concerned with Ukraine
+  - Ukraine is used as an example in a broader context of European crises.
+- **BEL -> UKR** NEG conf=0.8: the representation of the far-right party
+  - The mention of the far-right party's representation is used to discredit the Ukrainian government and movements.
+- **ESP -> UKR** NEG conf=0.8: Ukraine do not need any more military tension
+  - Ukraine is used as an example of a place that does not need more military tension.
+- **ESP -> UKR** NEU conf=0.8: Refugees from Ukraine flee
+  - Ukraine is used to exemplify other refugee situations without direct comparison or evaluation.
+- **GRC -> UKR** POS conf=0.8: Greece and Cyprus have been an area of stability
+  - Greece and Cyprus are presented as a model of stability in a region of conflict.
+- **GRC -> UKR** NEG conf=0.8: Ukraine, which does not exist
+  - Ukraine is presented negatively by not existing in the described ideal scenario.
+- **ITA -> UKR** NEU conf=0.8: crisis in Ukraine
+  - Ukraine is used as an example of a crisis, but not in a direct cause-effect relationship.
+- **NLD -> UKR** NEG conf=0.8: no , it does n't matter to me , do n't matter to me
+  - The speaker criticizes Mr. Pechtold's stance on democracy and Ukraine.
+- **SWE -> UKR** POS conf=0.8: fully share
+  - The speaker fully shares an attitude with Ukraine, indicating a positive stance.
+- **AUT -> UKR** POS conf=0.8: fled Ukraine
+  - Ukraine is used as an example of those who need protection and constructive solutions.
+- **POL -> SYR** POS conf=0.8: with the admission of 100,000
+  - Poland is used as an example of successful integration.
+- **POL -> SYR** NEU conf=0.8: The solution in Syria, Turkey, Greece
+  - Syria is used to exemplify the broader context of migration issues.
+- **ESP -> LBY** NEU conf=0.8: recovered the influence lost
+  - Libya is used as an example of a situation that needs resolution and political agreement.
+- **ITA -> LBY** NEG conf=0.8: the latter told you that Italy should have provided for the disarmament of Libya
+  - Libya is used as an example of mistakes Italy should have corrected.
+- **ITA -> LBY** NEG conf=0.8: Libya or Egypt those who greeted the Arab Springs
+  - Compared Libya/Egypt negatively to Arab Spring supporters
+- **SWE -> LBY** NEG conf=0.8: Libya illustrate how difficult
+  - Libya is used as an example of failed military efforts.
+
+## EXCHANGE (26)
+
+- **ESP -> TUR** POS conf=0.8: collaborating in a special way
+  - Spain is collaborating with Turkey on a resettlement program.
+- **GRC -> TUR** NEU conf=0.8: bilateral protocol on readmission
+  - The mention discusses a bilateral agreement for readmission which is an exchange of actions.
+- **NLD -> TUR** POS conf=0.8: we look at the way in which we can work
+  - NLD mentions working closely with Turkey in a multilateral forum.
+- **NLD -> TUR** POS conf=0.8: work even more closely
+  - The speaker emphasizes the need for closer collaboration with Turkey.
+- **POL -> TUR** POS conf=0.8: could be exchanged
+  - The mention discusses potential cooperation on refugee aid.
+- **POL -> TUR** POS conf=0.8: summit of the European Union and Turkey
+  - Summits indicate bilateral cooperation on migration issues.
+- **SWE -> TUR** POS conf=0.8: work together
+  - bilateral cooperation on migration issues
+- **AUT -> UKR** POS conf=0.8: as happened last in New York
+  - discusses cooperation and support for OSCE activities in Ukraine
+- **BEL -> UKR** POS conf=0.8: promote trade between the European Union and Ukraine
+  - The mention discusses promoting trade and mobility which indicates a positive exchange.
+- **FRA -> UKR** POS conf=0.8: bilateral cooperation
+  - The speaker aims to cooperate bilaterally with Ukraine on adoption issues.
+- **ITA -> UKR** NEU conf=0.75: add the issue of Ukraine to the agenda
+  - The mention of adding Ukraine to the agenda suggests bilateral cooperation.
+- **NLD -> UKR** NEU conf=0.8: association agreement with Ukraine
+  - discusses cooperation through an association agreement
+- **SWE -> UKR** NEU conf=0.8: We have the same process with Ukraine.
+  - Describes a similar process for visa liberalization between Sweden and Ukraine.
+- **SWE -> LBY** POS conf=0.8: close cooperation between the EU and the UN
+  - The speaker emphasizes the importance of cooperation with the UN and a potential future government in Libya.
+- **CZE -> BLR** NEU conf=0.8: pension agreement submitted with Belarus
+  - Describes a standard contract for defining social security payments for migrant workers.
+- **BIH -> BLR** NEU conf=0.7: entry and stay for up to five days
+  - Bosnia and Herzegovina and Belarus are exchanging visa policies for their citizens.
+- **EST -> BLR** POS conf=0.8: look with open eyes more towards
+  - The speaker suggests potential cooperation in finding medical professionals from Belarus.
+- **AUT -> MAR** POS conf=0.8: co-operate with Morocco
+  - Spain and Morocco have a cooperative relationship on migration.
+- **BEL -> MAR** POS conf=0.8: Morocco is ready to talk
+  - Bilateral cooperation on migration management is discussed positively.
+- **ESP -> MAR** POS conf=0.8: degree of cooperation with Morocco
+  - The text highlights bilateral cooperation in various areas including immigration, terrorism, drug trafficking, police training, and trade.

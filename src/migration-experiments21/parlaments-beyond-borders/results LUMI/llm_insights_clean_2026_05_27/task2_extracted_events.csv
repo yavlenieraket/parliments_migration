@@ -1,0 +1,177 @@
+country,year,entity_content,concreteness_score,event_name,primary_actors,location_or_route,affected_cohort,evidentiary_use,confidence
+UKR,2016,Cuba,3.5,unspecified,"[""Stepan of Cuba""]",,economic_migrants,neutral_reporting,0.7
+UKR,2018,Germany,3.65,unspecified,Germany,unspecified,unspecified,neutral_reporting,0.7
+UKR,2021,Bulgaria,3.527,unspecified,Bulgaria,unspecified,unspecified,neutral_reporting,0.7
+UKR,2021,Republic of Belarus,3.563,unspecified,"Ukraine, Republic of Belarus",Ukrainian border with the Republic of Belarus,unspecified,neutral_reporting,0.7
+UKR,2021,Republic of Belarus,3.563,unspecified,"Ukraine, Republic of Belarus",Ukrainian border with the Republic of Belarus,unspecified,neutral_reporting,0.7
+UKR,2021,Republic of Poland,3.57,unspecified,,,unspecified,neutral_reporting,0.8
+UKR,2022,Republic of Poland,3.534,unspecified,citizens of the Republic of Poland,Ukraine,unspecified,neutral_reporting,0.7
+UKR,2022,Republic of Poland,3.534,unspecified,citizens of the Republic of Poland,Ukraine,unspecified,neutral_reporting,0.7
+ITA,2013,Democratic Republic of Congo,3.518,adoption and family reunification,"24 Italian families, Democratic Republic of Congo",Democratic Republic of Congo to Italy,unspecified,neutral_reporting,0.8
+ITA,2019,Turkey,3.521,unspecified,"[""Turkey""]",Turkey,economic_migrants,restriction,0.7
+ITA,2020,Spain,3.518,unspecified,ship,Malta and Spain,unspecified,neutral_reporting,0.7
+ITA,2020,Finland,3.569,unspecified,"Spanish ship, Maltese waters, Finland, Venezuela, Italy",Maltese waters,unspecified,neutral_reporting,0.7
+ITA,2020,Spain,3.514,unspecified,"Spanish ship, Malta, Spain",Maltese waters,unspecified,neutral_reporting,0.7
+ITA,2020,Malta,3.581,unspecified,"Malta, Spain",unspecified,unspecified,neutral_reporting,0.7
+ITA,2020,Malta,3.565,unspecified,"ship's commander, Spanish embassy in Malta",Malta,unspecified,neutral_reporting,0.7
+ITA,2020,Malta,3.506,unspecified,"[""Malta""]",Malta,unspecified,neutral_reporting,0.7
+EST,2017,Ukraine,3.54,visa_liberalisation,"Police and Border Guard Board, Ukraine",Ukraine,unspecified,neutral_reporting,0.8
+EST,2019,Finland,3.538,unspecified,,Finland,unspecified,neutral_reporting,0.7
+EST,2021,Belarus,3.544,unspecified,people,Belarus,unspecified,neutral_reporting,0.7
+EST,2021,Finland,3.564,unspecified,Finland,Finland,students,neutral_reporting,0.7
+EST,2021,Finland,3.537,unspecified,Katrin Kurmiste,Finland,unspecified,neutral_reporting,0.7
+EST,2021,Finland,3.585,unspecified,,Finland,refugees,neutral_reporting,0.7
+EST,2021,Finland,3.585,unspecified,,Finland,refugees,neutral_reporting,0.7
+EST,2021,Russia,3.526,illegal border crossings,"people, Russia","Russia's borders, Northern Finland and Norway, border between Norway and Russia",unspecified,restriction,0.7
+NOR,2015,Russia,3.5,unspecified,people,Russia,unspecified,neutral_reporting,0.7
+NOR,2017,Afghanistan,3.544,unspecified,"[""Afghanistan""]",unspecified,refugees,neutral_reporting,0.7
+NOR,2018,Russia,3.622,unspecified,,border with Russia,unspecified,,0.7
+NOR,2018,Russia,3.53,unspecified,"[""Norway"", ""Russia""]",Norwegian - Russian border,unspecified,restriction,0.7
+NOR,2018,Iraq,3.533,unspecified,unspecified,Iraq,unspecified,neutral_reporting,0.7
+NOR,2019,Greece,3.541,unspecified,,seaway from Turkey to Greece,refugees,neutral_reporting,0.7
+NOR,2020,Greece,3.6,unspecified,,Greece,refugees,neutral_reporting,0.8
+NOR,2021,Greece,3.5,unspecified,Greece,Greece,unspecified,neutral_reporting,0.7
+ISL,2017,United States,3.602,denial_of_entry,"President Donald Trump, passengers, United States",Keflavik Airport,economic_migrants,restriction,0.8
+ISL,2017,United States,3.602,denial_of_entry,"President Donald Trump, passengers, United States",Keflavik Airport,economic_migrants,restriction,0.8
+ISL,2020,Greece,3.519,migration restriction,Greece,unspecified,refugees,restriction,0.8
+ISL,2021,Saudi Arabia,3.6,unspecified,Saudi Arabia,unspecified,unspecified,,0.2
+ISL,2021,Syria,3.538,unspecified,Syrians,inside of Syria,refugees,neutral_reporting,0.8
+ISL,2021,Sweden,3.5,unspecified,Sweden,unspecified,unspecified,,0.7
+ISL,2021,United States,3.5,unspecified,United States,unspecified,unspecified,neutral_reporting,0.7
+ISL,2021,Sweden,3.5,unspecified,,Sweden,unspecified,neutral_reporting,0.6
+HRV,2017,Czech Republic,3.65,unspecified,,"Czech Republic, Lika",unspecified,,0.6
+HRV,2017,Estonia,3.714,unspecified,Estonia,Estonia,unspecified,neutral_reporting,0.6
+HRV,2018,Austria,3.65,unspecified,"Croatia, Austria",Austria,unspecified,neutral_reporting,0.7
+HRV,2019,Hungary,3.51,illegal migration,Hungary,border,economic_migrants,restriction,0.7
+HRV,2019,Ireland,3.5,unspecified,Ireland,unspecified,unspecified,neutral_reporting,0.7
+HRV,2020,United Kingdom,3.525,unspecified,,,unspecified,neutral_reporting,0.7
+HRV,2021,Republic of Serbia,3.506,unspecified,"children from BiH and the Republic of Serbia, asylum seekers",unspecified,asylum_seekers,neutral_reporting,0.7
+HRV,2021,Republic of Serbia,3.514,unspecified,HRV,unspecified,unspecified,neutral_reporting,0.7
+BIH,2021,United Kingdom,3.864,unspecified,"Predrag Kojović, Aida Baručija, Mirjana Marinković-Lepić Lepic, Damir Arnaut, Nermin Nikšić, Saša Magazinović, Zukan Helez, Nada (Mladina)",BiH Parliament,unspecified,neutral_reporting,0.7
+BIH,2021,United Kingdom,3.864,unspecified,"Predrag Kojović, Aida Baručija, Mirjana Marinković-Lepić, Damir Arnaut, Nermin Nikšić, Saša Magazinović, Zukan Helez, Nada (Mladina)",BiH Parliament,unspecified,neutral_reporting,0.7
+BIH,2021,United Kingdom,3.864,unspecified,"Predrag Kojović, Aida Baručija, Mirjana Marinković-Lepić, Damir Arnaut, Nermin Nikšić, Saša Magazinović, Zukan Helez, Nada (Mladina)",BiH Parliament,unspecified,neutral_reporting,0.7
+BIH,2021,United Kingdom,3.864,unspecified,"Predrag Kojović, Aida Baručija, Mirjana Marinković-Lepić, Damir Arnaut, Nermin Nikšić, Saša Magazinović, Zukan Helez, Nada (Mladina)",BiH Parliament,unspecified,neutral_reporting,0.7
+BIH,2021,United Kingdom,3.864,unspecified,"Predrag Kojović, Aida Baručija, Mirjana Marinković-Lepić, Damir Arnaut, Nermin Nikšić, Saša Magazinović, Zukan Helez, Nada (Mladina)",BiH Parliament,unspecified,neutral_reporting,0.7
+BIH,2021,United Kingdom,3.864,unspecified,"Predrag Kojović, Aida Baručija, Mirjana Marinković-Lepić, Damir Arnaut, Nermin Nikšić, Saša Magazinović, Zukan Helez, Nada (Mladina)",BiH Parliament,unspecified,neutral_reporting,0.7
+BIH,2021,United Kingdom,3.864,unspecified,"Predrag Kojović, Aida Baručija, Mirjana Marinković-Lepić, Damir Arnaut, Nermin Nikšić, Saša Magazinović, Zukan Helez, Nada (Mladina)",BiH Parliament,unspecified,neutral_reporting,0.7
+BIH,2021,United Kingdom,3.864,unspecified,"Predrag Kojović, Aida Baručija, Mirjana Marinković-Lepić, Damir Arnaut, Nermin Nikšić, Saša Magazinović, Zukan Helez, Nada (Mladina)",BiH Parliament,unspecified,neutral_reporting,0.7
+TUR,2019,Azerbaijan,3.568,unspecified,Azerbaijan,unspecified,unspecified,neutral_reporting,0.7
+TUR,2022,Greece,3.51,pushback,"Greece, unspecified",Ipsala border,refugees,restriction,0.7
+TUR,2022,United States,4.224,unspecified,unspecified,unspecified,unspecified,,0.1
+TUR,2022,United States,4.224,unspecified,unspecified,unspecified,unspecified,,0.1
+TUR,2022,United States,4.224,unspecified,unspecified,unspecified,unspecified,,0.1
+TUR,2022,United States,4.224,unspecified,unspecified,unspecified,unspecified,,0.1
+TUR,2022,United States,4.224,unspecified,unspecified,unspecified,unspecified,,0.1
+TUR,2022,United States,4.224,unspecified,unspecified,unspecified,unspecified,,0.1
+SWE,2015,Denmark,3.6,unspecified,Denmark,unspecified,unspecified,neutral_reporting,0.7
+SWE,2016,Israel,3.56,unspecified,"Foreign Minister, Israel",unspecified,unspecified,other,0.2
+SWE,2017,Denmark,3.51,unspecified,"[""Sweden"", ""Denmark""]",Denmark-Germany border,unspecified,restriction,0.8
+SWE,2017,Denmark,3.51,unspecified,"[""Swedish border control"", ""Denmark""]",between Denmark and Germany,unspecified,restriction,0.8
+SWE,2017,North Korea,3.53,unspecified,unspecified,unspecified,unspecified,neutral_reporting,0.8
+SWE,2018,Lebanon,3.5,unspecified,Lebanon,Lebanon,unspecified,neutral_reporting,0.7
+SWE,2020,Afghanistan,3.588,unspecified,unspecified,Afghanistan,unspecified,neutral_reporting,0.7
+SWE,2021,Afghanistan,3.63,unspecified,"Swedish government, Afghanistan","Sweden, Afghanistan",refugees,neutral_reporting,0.7
+SVN,2015,South Africa,3.532,unspecified,Mr. Kordish,Africa,asylum_seekers,restriction,0.7
+SVN,2018,Czech Republic,3.6,unspecified,Czech Republic,unspecified,unspecified,neutral_reporting,0.7
+SVN,2019,Republic of Latvia,3.71,unspecified,,,unspecified,neutral_reporting,0.1
+SVN,2019,Italy,3.513,unspecified,SVN,border with Italy,unspecified,restriction,0.7
+SVN,2019,Nigeria,3.5,unspecified,people in Nigeria,Nigeria to Europe,economic_migrants,neutral_reporting,0.7
+SVN,2019,Austria,3.619,Austria closes borders,Austria,Austria,unspecified,,0.8
+SVN,2019,Republic of Serbia,3.607,unspecified,,"Republic of Serbia, northern Macedonian border",unspecified,neutral_reporting,0.7
+SVN,2019,Republic of Croatia,3.606,smuggling_of_illegal_migrants,"smugglers, illegal migrants",border area between Republic of Croatia and Republic of Slovenia,illegal migrants,restriction,0.7
+LVA,2018,United Kingdom,3.538,unspecified,,,unspecified,neutral_reporting,0.7
+LVA,2018,United States,3.538,unspecified,,,unspecified,neutral_reporting,0.7
+LVA,2021,Belarus,3.5,unspecified,,Belarus border,unspecified,neutral_reporting,0.7
+LVA,2021,Belarus,3.593,unspecified,"Latvia, Belarus",border with Belarus,unspecified,neutral_reporting,0.7
+LVA,2021,Belarus,3.561,unspecified,"local people, border guards",border with Belarus,unspecified,neutral_reporting,0.7
+LVA,2021,Germany,3.527,2015 Germany migration crisis,Germany,Germany,refugees,neutral_reporting,0.7
+LVA,2021,Lithuania,3.509,migrants crossing border,"migrants, border guards of Lithuania",Belarus and Lithuania border,unspecified,neutral_reporting,0.8
+LVA,2021,Lithuania,3.509,migrants crossing border,"migrants, border guards of Lithuania",Belarus and Lithuania border,unspecified,neutral_reporting,0.8
+POL,2017,Republic of Moldova,3.513,refugees fleeing,refugees,Republic of Moldova to Romania,refugees,neutral_reporting,0.8
+POL,2019,United Kingdom,3.527,regulation_of_status,United Kingdom citizens and their families,Poland,economic_migrants,,0.8
+POL,2021,Iraq,3.6,unspecified,Iraq,unspecified,unspecified,,0.7
+POL,2021,Lithuania,3.517,unspecified,"Poland, Ukraine, Lithuania, Russia",eastern border of Poland,unspecified,,0.7
+POL,2021,Russia,3.517,unspecified,"Poland, Ukraine, Lithuania, Russia",eastern border of Poland,unspecified,neutral_reporting,0.7
+POL,2021,Belarus,3.56,unspecified,unspecified,Belarus,unspecified,neutral_reporting,0.2
+POL,2022,Ukraine,3.527,unspecified,"Poland, Ukraine",Ukraine,unspecified,neutral_reporting,0.7
+POL,2022,Ukraine,3.5,unspecified,unspecified,Ukraine,unspecified,neutral_reporting,0.3
+GRC,2015,Syria,3.5,unspecified,unspecified,unspecified,refugees,neutral_reporting,0.7
+GRC,2016,Germany,3.563,unspecified,"minor child, father, mother",Germany,unspecified,neutral_reporting,0.7
+GRC,2020,Turkey,3.5,unspecified,unspecified,Turkey,unspecified,neutral_reporting,0.2
+GRC,2020,Turkey,3.577,unspecified,monkeys,unspecified,unspecified,neutral_reporting,0.1
+GRC,2021,Republic of Estonia,3.657,unspecified,"[""Kingdom of Belgium"", ""Federal Republic of Germany"", ""Republic of Estonia"", ""Ireland"", ""Hellenic Republic"", ""Kingdom of Spain"", ""French Republic"", ""Italian Republic"", ""Republic of Cyprus"", ""Republic of Latvia"", ""Republic of Lithuania"", ""Grand Duchy of Luxembourg""]",,unspecified,neutral_reporting,0.7
+GRC,2021,Republic of Austria,3.657,unspecified,"Kingdom of Belgium, Federal Republic of Germany, Republic of Estonia, Ireland, Hellenic Republic, Kingdom of Spain, French Republic, Italian Republic, Republic of Cyprus, Republic of Latvia, Republic of Lithuania, Grand Duchy of Luxembourg",unspecified,unspecified,neutral_reporting,0.7
+GRC,2021,Republic of Slovenia,3.657,unspecified,,,unspecified,,0.2
+GRC,2021,Republic of Austria,3.682,unspecified,,,unspecified,neutral_reporting,0.1
+AUT,2015,Switzerland,3.51,unspecified,Switzerland,Switzerland,refugees,neutral_reporting,0.7
+AUT,2015,Germany,3.588,refugee_data_collection_and_control,"Germany, Austria",borders,refugees,restriction,0.8
+AUT,2016,Syria,3.538,unspecified,unspecified,unspecified,refugees,,0.7
+AUT,2016,Syria,3.8,unspecified,unspecified,unspecified,refugees,,0.7
+AUT,2016,Syria,3.527,unspecified,"he, his parents",Syria,refugees,neutral_reporting,0.7
+AUT,2016,South Sudan,3.5,unspecified,unspecified,unspecified,unspecified,,0.7
+AUT,2016,South Sudan,3.584,unspecified,"Speaker parliament (AUT), project managers",South Sudan,unspecified,neutral_reporting,0.8
+AUT,2018,Tunisia,3.527,unspecified,"[""people from Tunisia, Morocco, Guinea""]",unspecified,economic_migrants,neutral_reporting,0.7
+BEL,2016,United Kingdom,3.56,unspecified,people from outside Schengen,Schengen to the United Kingdom,economic_migrants,restriction,0.7
+BEL,2016,United Kingdom,3.543,unspecified,United Kingdom,unspecified,unspecified,neutral_reporting,0.7
+BEL,2018,Rwanda,3.506,unspecified,"Speaker parliament (BEL), Congolese refugees",Rwanda,refugees,,0.7
+BEL,2018,Tunisia,3.567,unspecified,Tunisia,unspecified,unspecified,neutral_reporting,0.7
+BEL,2019,Syria,3.536,unspecified,unspecified,Syria,unspecified,neutral_reporting,0.7
+BEL,2020,United Kingdom,3.568,unspecified,"Mrs Van Camp, United Kingdom",unspecified,unspecified,neutral_reporting,0.7
+BEL,2020,United Kingdom,3.574,unspecified,United Kingdom,unspecified,unspecified,neutral_reporting,0.7
+BEL,2021,Pakistan,3.608,visa_requirement,unspecified,Pakistan,unspecified,neutral_reporting,0.7
+NLD,2015,North Macedonia,3.5,unspecified,unspecified,Macedonia,unspecified,neutral_reporting,0.2
+NLD,2016,Curaçao,3.57,unspecified,NLD,"Aruba, Curaçao",asylum_seekers,,0.7
+NLD,2018,Greece,3.714,unspecified,Greece,Greece,unspecified,restriction,0.7
+NLD,2018,Curaçao,3.547,unspecified,,Curaçao,unspecified,neutral_reporting,0.7
+NLD,2019,Cyprus,3.504,unspecified,unspecified,Cyprus,unspecified,neutral_reporting,0.3
+NLD,2019,Canada,3.56,legalization_of_migration_policy,Canada,unspecified,unspecified,neutral_reporting,0.7
+NLD,2021,Curaçao,3.51,unspecified,"Curaçao, foreigners",Curaçao,foreigners,restriction,0.7
+NLD,2021,Curaçao,3.547,unspecified,Curaçao,unspecified,unspecified,neutral_reporting,0.7
+FRA,2017,Iran,3.56,unspecified,Iran,Iran,unspecified,,0.7
+FRA,2017,Libya,3.526,unspecified,Libya,Libya,unspecified,neutral_reporting,0.7
+FRA,2018,United Kingdom,3.544,unspecified,"France, United Kingdom",border between France and the United Kingdom,unspecified,neutral_reporting,0.7
+FRA,2019,Belgium,3.538,unspecified,cross-border workers,border with Belgium,economic_migrants,neutral_reporting,0.8
+FRA,2020,Pakistan,3.544,irregular_arrival,he,from Pakistan,refugees,,0.7
+FRA,2021,Italy,3.533,Italy closes border,Italy,Italy's border,unspecified,,0.8
+FRA,2022,Turkey,3.8,unspecified,migrants,Turkey,unspecified,neutral_reporting,0.7
+ESP,2018,Canada,3.65,unspecified,Canada,unspecified,unspecified,neutral_reporting,0.7
+ESP,2022,Morocco,3.508,unspecified,"Spain, Morocco",unspecified,unspecified,,0.7
+ESP,2022,Morocco,3.544,externalization_of_borders,"Europe, Morocco",Morocco's borders with Europe,unspecified,restriction,0.7
+BGR,2015,Republic of Serbia,3.586,unspecified,unspecified,Republic of Serbia,unspecified,neutral_reporting,0.7
+BGR,2015,Republic of Albania,3.68,unspecified,unspecified,Republic of Albania,unspecified,neutral_reporting,0.7
+BGR,2015,Syrian Arab Republic,3.579,non-discrimination of immigrants,"immigrants from the Middle East and North Africa, refugees from the Syrian Arab Republic",territory of the Republic of Bulgaria,refugees,solidarity,0.8
+BGR,2015,Syrian Arab Republic,3.54,immigration_prevention,"Council of Ministers, immigrants",territory of the Republic of Bulgaria,refugees,restriction,0.8
+BGR,2016,Turkey,3.677,visa_regime_with_turkey,"BGR, Turkey",unspecified,unspecified,neutral_reporting,0.7
+BGR,2016,Turkey,3.565,visa_regime_with_turkey,"BGR, Turkey",unspecified,unspecified,neutral_reporting,0.7
+BGR,2018,Republic of Serbia,3.516,unspecified,Republic of Serbia,unspecified,unspecified,,0.7
+FIN,2016,Turkey,3.505,assisting Syrian refugees in Turkey,we,Turkey,refugees,restriction,0.8
+FIN,2016,Australia,3.575,boat turnbacks,Australia,open sea,asylum_seekers,restriction,0.8
+FIN,2016,Iraq,3.526,forced_separation,mother and child vs. father and infant,Finland to Iraq,refugees,restriction,0.8
+FIN,2017,Sweden,3.543,unspecified,"Switzerland, Sweden",unspecified,refugees,restriction,0.7
+FIN,2017,Peru,3.56,unspecified,Finns of Peru,Peru,unspecified,neutral_reporting,0.8
+FIN,2018,Sweden,3.51,unspecified,women,Sweden,unspecified,neutral_reporting,0.7
+FIN,2021,Poland,3.571,unspecified,Poland,border,unspecified,neutral_reporting,0.7
+FIN,2021,Russia,3.543,unspecified,Russia,unspecified,unspecified,neutral_reporting,0.7
+SRB,2018,Republic of Croatia,4.026,unspecified,Republic of Croatia,unspecified,unspecified,,0.7
+SRB,2018,Islamic Republic of Iran,3.542,visa-free regime abolition,"government, Islamic Republic of Iran",unspecified,unspecified,restriction,0.8
+SRB,2018,Iran,3.51,visa-free regime lifting,SRB (Serbia) and Iran,between Serbia and Iran,unspecified,restriction,0.7
+SRB,2019,Kosovo,3.548,unspecified,"countries, Kosovo",unspecified,unspecified,neutral_reporting,0.7
+SRB,2019,Kosovo,3.548,unspecified,"countries, Kosovo",unspecified,unspecified,neutral_reporting,0.7
+SRB,2020,Republic of Albania,3.56,unspecified,citizens of the Republic of Albania,unspecified,economic_migrants,neutral_reporting,0.7
+SRB,2020,Republic of Albania,3.56,unspecified,citizens of the Republic of Albania,unspecified,economic_migrants,neutral_reporting,0.7
+SRB,2021,Hungary,3.661,unspecified,"migrants, Hungary",three-way border area,economic_migrants,restriction,0.7
+PRT,2018,United States,3.517,detention of migrant children,"United States, Mexico",border between the United States and Mexico,refugees,restriction,0.7
+PRT,2022,Andorra,3.56,consulate closure,Portuguese people in Andorra,Andorra,unspecified,neutral_reporting,0.7
+HUN,2015,Austria,3.544,unspecified,"Austria, France",unspecified,unspecified,neutral_reporting,0.7
+HUN,2015,United Kingdom,3.504,unspecified,United Kingdom,United Kingdom,unspecified,neutral_reporting,0.7
+HUN,2015,United Kingdom,3.5,unspecified,"Hungarians, United Kingdom",Hungary to United Kingdom,economic_migrants,neutral_reporting,0.7
+HUN,2018,Serbia,3.56,unspecified,,,unspecified,neutral_reporting,0.7
+HUN,2021,Republic of North Macedonia,3.508,unspecified,"Republic of North Macedonia, Philippines",unspecified,unspecified,neutral_reporting,0.7
+CZE,2015,Iraq,3.6,unspecified,Iraq,Iraq,refugees,restriction,0.3
+CZE,2016,Jordan,3.736,unspecified,,Jordan and Syria border,refugees,,0.7
+CZE,2016,Turkey,3.559,visa_policy_tightening,Turkey,Turkey,economic_migrants,restriction,0.7
+CZE,2016,Turkey,3.559,visa_policy_tightening,Turkey,Turkey,economic_migrants,restriction,0.7
+CZE,2016,Turkey,3.559,visa_policy_tightening,Turkey,Turkey,economic_migrants,restriction,0.7
+CZE,2016,Turkey,3.515,visa_regime_delay,"Turkey, European Commission",unspecified,unspecified,restriction,0.8
+CZE,2016,United States,3.517,unspecified,"[""United States""]",United States,unspecified,neutral_reporting,0.7
+CZE,2018,Ukraine,3.65,unspecified,,Crimea,unspecified,,0.7
